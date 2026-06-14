@@ -19,4 +19,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // shadcn/ui generated components may export non-component values (e.g. buttonVariants).
+  // This is intentional and safe — disable the rule for the ui folder only.
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
