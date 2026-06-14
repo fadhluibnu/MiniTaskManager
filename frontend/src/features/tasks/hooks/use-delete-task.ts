@@ -5,6 +5,8 @@ import { MESSAGES } from '@/shared/constants/messages'
 import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
 import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
 import type { ActorCardData } from '@/features/actors/types/actor'
+import type { AuditLog } from '../types/audit-log'
+import { FALLBACK_AUDIT_LOGS } from '../constants/fallback-audit-logs'
 import type { Task } from '../types/task'
 
 interface DeleteTaskVars {
@@ -14,6 +16,20 @@ interface DeleteTaskVars {
 
 const SIMULATED_DELAY_MS = 200
 
+function readLocalAuditLogs(): AuditLog[] {
+  const stored = getJSON<AuditLog[]>(STORAGE_KEYS.previewAuditLogs)
+  if (stored && Array.isArray(stored)) return stored
+  setJSON(STORAGE_KEYS.previewAuditLogs, FALLBACK_AUDIT_LOGS)
+  return FALLBACK_AUDIT_LOGS
+}
+
+/**
+ * Soft-deletes a task: sets `deletedAt` + `deletedBy*` metadata and
+ * appends a `TASK_DELETED` audit log entry capturing the actor, the
+ * task's last status, and a title snapshot. The task is hidden from
+ * the active list (filtered out by `useTasks` / `useTask`) but
+ * remains in storage so the deleted-tasks view can show it later.
+ */
 export function useDeleteTask() {
   const queryClient = useQueryClient()
 
@@ -21,8 +37,8 @@ export function useDeleteTask() {
     mutationFn: async ({ taskId, actor }) => {
       await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
 
-      const current = getJSON<Task[]>(STORAGE_KEYS.previewTasks) ?? []
-      const task = current.find((t) => t.id === taskId)
+      const currentTasks = getJSON<Task[]>(STORAGE_KEYS.previewTasks) ?? []
+      const task = currentTasks.find((t) => t.id === taskId)
       if (!task) throw new Error('Task not found')
 
       const now = new Date().toISOString()
@@ -36,13 +52,28 @@ export function useDeleteTask() {
 
       setJSON(
         STORAGE_KEYS.previewTasks,
-        current.map((t) => (t.id === taskId ? deleted : t))
+        currentTasks.map((t) => (t.id === taskId ? deleted : t))
       )
+
+      const newLog: AuditLog = {
+        id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        taskId,
+        taskTitle: task.title,
+        actorId: actor.id,
+        actorName: actor.name,
+        eventType: 'TASK_DELETED',
+        fromStatus: task.status,
+        toStatus: null,
+        createdAt: now,
+      }
+      const currentLogs = readLocalAuditLogs()
+      setJSON(STORAGE_KEYS.previewAuditLogs, [newLog, ...currentLogs])
 
       return deleted
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tasks.all })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auditLogs.all })
       toast.success(MESSAGES.task.deleted)
     },
   })

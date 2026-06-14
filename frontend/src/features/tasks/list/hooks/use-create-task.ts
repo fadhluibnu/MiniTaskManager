@@ -5,8 +5,8 @@ import { MESSAGES } from '@/shared/constants/messages'
 import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
 import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
 import type { ActorCardData } from '@/features/actors/types/actor'
-import type { CreateTaskInput } from '../schemas/create-task-schema'
-import type { Task } from '../types/task'
+import type { CreateTaskInput } from '../../schemas/create-task-schema'
+import type { Task } from '../../types/task'
 
 interface CreateTaskVars {
   actor: ActorCardData

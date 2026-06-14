@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/shared/utils/format-date'
-import type { Task } from '../types/task'
-import { formatStatus } from '../utils/format-status'
-import { getNextStatus } from '../utils/get-next-status'
-import StatusBadge from './status-badge'
+import type { Task } from '../../types/task'
+import { formatStatus } from '../../utils/format-status'
+import { getNextStatus } from '../../utils/get-next-status'
+import StatusBadge from '../../components/status-badge'
 
 interface TaskCardProps {
   task: Task

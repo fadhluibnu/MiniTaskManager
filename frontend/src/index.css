@@ -166,4 +166,20 @@
     transform: translateY(-1px);
     box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
   }
+  .timeline-line {
+    position: relative;
+    padding-left: 3rem;
+  }
+  .timeline-line::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 38px;
+    bottom: -18px;
+    width: 1px;
+    background: #e2e8f0;
+  }
+  .timeline-line:last-child::before {
+    display: none;
+  }
 }

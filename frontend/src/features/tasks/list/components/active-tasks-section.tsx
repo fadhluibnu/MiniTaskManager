@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import TaskList from './task-list'
 import TaskSearchBar from './task-search-bar'
-import type { Task } from '../types/task'
+import type { Task } from '../../types/task'
 
 interface ActiveTasksSectionProps {
   tasks: Task[]
