@@ -15,19 +15,13 @@ const SIMULATED_DELAY_MS = 300
 
 function readLocalAuditLogs(): AuditLog[] {
   const stored = getJSON<AuditLog[]>(STORAGE_KEYS.previewAuditLogs)
-  if (stored && Array.isArray(stored)) {
+  if (stored && Array.isArray(stored) && stored.length > 0) {
     return stored
   }
   setJSON(STORAGE_KEYS.previewAuditLogs, FALLBACK_AUDIT_LOGS)
   return FALLBACK_AUDIT_LOGS
 }
 
-/**
- * Fetches the audit log entries for a single task, sorted newest first
- * (per `docs/SYSTEM_DESIGN.md` §12). Reads from the same
- * `previewAuditLogs` store as future Global Audit Trail queries; the
- * `auditLogs.all` key prefix keeps the two caches in sync.
- */
 export function useTaskAuditLogs(taskId: string): UseTaskAuditLogsResult {
   const query = useQuery<AuditLog[]>({
     queryKey: QUERY_KEYS.auditLogs.byTask(taskId),

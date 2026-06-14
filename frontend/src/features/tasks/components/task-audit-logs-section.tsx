@@ -1,20 +1,20 @@
 import { Button } from '@/components/ui/button'
-import type { AuditLog } from '../../types/audit-log'
+import type { AuditLog } from '../types/audit-log'
 import AuditLogItem from './audit-log-item'
 
 interface TaskAuditLogsSectionProps {
   logs: AuditLog[]
   isLoading: boolean
   onRefresh: () => void
+  emptyTitle?: string
+  emptyDescription?: string
 }
 
-function AuditLogsEmpty() {
+function AuditLogsEmpty({ title, description }: { title: string; description: string }) {
   return (
     <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center">
-      <h3 className="text-sm font-semibold text-slate-950">No audit logs yet</h3>
-      <p className="mt-1 text-sm text-slate-500">
-        Status changes and task deletion will be recorded here.
-      </p>
+      <h3 className="text-sm font-semibold text-slate-950">{title}</h3>
+      <p className="mt-1 text-sm text-slate-500">{description}</p>
     </div>
   )
 }
@@ -36,6 +36,8 @@ export default function TaskAuditLogsSection({
   logs,
   isLoading,
   onRefresh,
+  emptyTitle = 'No audit logs yet',
+  emptyDescription = 'Status changes and task deletion will be recorded here.',
 }: TaskAuditLogsSectionProps) {
   const countText = isLoading
     ? 'Loading logs...'
@@ -62,7 +64,7 @@ export default function TaskAuditLogsSection({
       {isLoading ? (
         <AuditLogsSkeleton />
       ) : logs.length === 0 ? (
-        <AuditLogsEmpty />
+        <AuditLogsEmpty title={emptyTitle} description={emptyDescription} />
       ) : (
         <div className="space-y-4">
           {logs.map((log) => (
