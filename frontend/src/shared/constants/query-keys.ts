@@ -5,6 +5,7 @@ export const QUERY_KEYS = {
   tasks: {
     all: ['tasks'] as const,
     detail: (taskId: string) => ['tasks', taskId] as const,
+    deleted: ['tasks', 'deleted'] as const,
   },
   auditLogs: {
     all: ['audit-logs'] as const,

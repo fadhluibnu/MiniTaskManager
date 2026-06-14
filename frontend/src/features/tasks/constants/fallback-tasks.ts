@@ -26,4 +26,17 @@ export const FALLBACK_TASKS: Task[] = [
     updatedAt: new Date(now.getTime() - HOUR_MS * 2).toISOString(),
     deletedAt: null,
   },
+  {
+    id: 'task_deleted_001',
+    title: 'Archive old onboarding checklist',
+    description: 'This task was removed because the onboarding checklist is no longer used.',
+    status: 'in_progress',
+    createdByActorId: 'john.doe',
+    createdByActorName: 'John Doe',
+    deletedByActorId: 'admin.user',
+    deletedByActorName: 'Admin User',
+    createdAt: new Date(now.getTime() - HOUR_MS * 30).toISOString(),
+    updatedAt: new Date(now.getTime() - HOUR_MS * 3).toISOString(),
+    deletedAt: new Date(now.getTime() - HOUR_MS * 3).toISOString(),
+  },
 ]
