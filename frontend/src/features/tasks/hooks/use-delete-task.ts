@@ -5,8 +5,8 @@ import { MESSAGES } from '@/shared/constants/messages'
 import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
 import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
 import type { ActorCardData } from '@/features/actors/types/actor'
-import type { AuditLog } from '../types/audit-log'
-import { FALLBACK_AUDIT_LOGS } from '../constants/fallback-audit-logs'
+import type { AuditLog } from '@/features/audit-logs/types/audit-log'
+import { FALLBACK_AUDIT_LOGS } from '@/features/audit-logs/constants/fallback-audit-logs'
 import type { Task } from '../types/task'
 
 interface DeleteTaskVars {
@@ -23,13 +23,6 @@ function readLocalAuditLogs(): AuditLog[] {
   return FALLBACK_AUDIT_LOGS
 }
 
-/**
- * Soft-deletes a task: sets `deletedAt` + `deletedBy*` metadata and
- * appends a `TASK_DELETED` audit log entry capturing the actor, the
- * task's last status, and a title snapshot. The task is hidden from
- * the active list (filtered out by `useTasks` / `useTask`) but
- * remains in storage so the deleted-tasks view can show it later.
- */
 export function useDeleteTask() {
   const queryClient = useQueryClient()
 

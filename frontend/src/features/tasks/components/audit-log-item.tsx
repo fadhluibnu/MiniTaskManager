@@ -1,7 +1,7 @@
 import { ArrowRight, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/shared/utils/format-date'
-import type { AuditLog } from '../types/audit-log'
+import type { AuditLog } from '@/features/audit-logs/types/audit-log'
 import { formatStatus } from '../utils/format-status'
 
 interface AuditLogItemProps {

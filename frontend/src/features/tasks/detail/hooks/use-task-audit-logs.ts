@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/shared/constants/query-keys'
 import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
 import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
-import { FALLBACK_AUDIT_LOGS } from '../../constants/fallback-audit-logs'
-import type { AuditLog } from '../../types/audit-log'
+import { FALLBACK_AUDIT_LOGS } from '@/features/audit-logs/constants/fallback-audit-logs'
+import type { AuditLog } from '@/features/audit-logs/types/audit-log'
 
 interface UseTaskAuditLogsResult {
   logs: AuditLog[]

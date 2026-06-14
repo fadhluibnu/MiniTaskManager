@@ -5,8 +5,8 @@ import { MESSAGES } from '@/shared/constants/messages'
 import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
 import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
 import type { ActorCardData } from '@/features/actors/types/actor'
-import type { AuditLog } from '../types/audit-log'
-import { FALLBACK_AUDIT_LOGS } from '../constants/fallback-audit-logs'
+import type { AuditLog } from '@/features/audit-logs/types/audit-log'
+import { FALLBACK_AUDIT_LOGS } from '@/features/audit-logs/constants/fallback-audit-logs'
 import type { Task } from '../types/task'
 import { formatStatus } from '../utils/format-status'
 import { getNextStatus } from '../utils/get-next-status'
@@ -25,14 +25,6 @@ function readLocalAuditLogs(): AuditLog[] {
   return FALLBACK_AUDIT_LOGS
 }
 
-/**
- * Moves a task one step forward in the status flow and appends a
- * `STATUS_CHANGED` audit log entry capturing the actor, both statuses,
- * and a task title snapshot (so the log remains understandable after
- * the task is later deleted). The actor is required by the backend
- * audit contract; it is passed here so the page can show a clear
- * "no actor" error before the request fires.
- */
 export function useUpdateTaskStatus() {
   const queryClient = useQueryClient()
 

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import type { AuditLog } from '../types/audit-log'
+import type { AuditLog } from '@/features/audit-logs/types/audit-log'
 import AuditLogItem from './audit-log-item'
 
 interface TaskAuditLogsSectionProps {
