@@ -128,3 +128,32 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  .actor-card {
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+  .actor-card:hover {
+    transform: translateY(-1px);
+  }
+  .actor-card[data-selected='true'] {
+    border-color: hsl(222.2 47.4% 11.2%);
+    background: #f8fafc;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.04);
+  }
+  .radio-dot {
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+  .actor-card[data-selected='true'] .radio-dot {
+    border-color: hsl(222.2 47.4% 11.2%);
+    background: hsl(222.2 47.4% 11.2%);
+    box-shadow: inset 0 0 0 5px white;
+  }
+}
