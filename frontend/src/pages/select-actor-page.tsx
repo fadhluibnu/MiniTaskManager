@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,10 @@ import ActorListSkeleton from '@/features/actors/components/actor-list-skeleton'
 import SelectedActorBox from '@/features/actors/components/selected-actor-box'
 
 export default function SelectActorPage() {
+  useEffect(() => {
+    document.title = 'Choose Actor - Mini Task Manager'
+  }, [])
+
   const { actors, isLoading, isUsingFallback } = useActors()
   const { selectedActor, selectActor, clearSelection } = useSelectedActor(actors)
   const navigate = useNavigate()
