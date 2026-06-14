@@ -1,0 +1,14 @@
+[
+  {
+    "id": "john.doe",
+    "name": "John Doe"
+  },
+  {
+    "id": "jane.smith",
+    "name": "Jane Smith"
+  },
+  {
+    "id": "admin.user",
+    "name": "Admin User"
+  }
+]
