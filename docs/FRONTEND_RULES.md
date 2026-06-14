@@ -47,6 +47,7 @@ This document defines the frontend development rules, conventions, and structure
 | Icons | `lucide-react` | Icon set for UI |
 | Formatter | `prettier` | Code formatting |
 | Linter | `eslint` | Code linting |
+| Routing | `react-router-dom` | Client-side routing foundation |
 
 ---
 
@@ -230,7 +231,18 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
 
 ---
 
-## 10. Pre-Review Checklist
+## 10. Routing Rules
+
+- Use `react-router-dom` for client-side routing.
+- Define route configuration in `src/app/router.tsx`.
+- Keep the initial router setup minimal.
+- Page-level files will be created later when page structure is finalized.
+- Do not put business logic directly inside route definitions.
+- Use route params only for identifiers such as `taskId` when detail pages are implemented later.
+
+---
+
+## 11. Pre-Review Checklist
 
 Before marking a pull request as ready for review, ensure:
 

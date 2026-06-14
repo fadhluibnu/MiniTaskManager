@@ -1,10 +1,6 @@
+import { RouterProvider } from 'react-router-dom'
+import { router } from './router'
+
 export default function App() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">Mini Task Manager</h1>
-        <p className="mt-4 text-lg text-muted-foreground">Frontend foundation is ready.</p>
-      </div>
-    </main>
-  )
+  return <RouterProvider router={router} />
 }
