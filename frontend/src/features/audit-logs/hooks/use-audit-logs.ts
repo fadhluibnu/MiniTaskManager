@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/shared/constants/query-keys'
-import { readLocalAuditLogs } from '../utils/read-local-audit-logs'
+import { auditLogsService } from '../services/audit-logs-service'
 import type { AuditLog } from '../types/audit-log'
 
 interface UseAuditLogsResult {
@@ -9,17 +9,25 @@ interface UseAuditLogsResult {
   refetch: () => void
 }
 
-const SIMULATED_DELAY_MS = 300
-
+/**
+ * Fetches the global audit trail (active + deleted task logs),
+ * newest first (the backend handles the sort).
+ *
+ * Search and event-type filtering happen client-side via
+ * `filterAuditLogs` because the backend does not support
+ * `?search=` or `?eventType=` on this endpoint.
+ *
+ * Cache stays in sync with the task pages through
+ * `useUpdateTaskStatus` and `useDeleteTask`, which both invalidate
+ * `QUERY_KEYS.auditLogs.all` (`['audit-logs']`). TanStack Query
+ * prefix-matches the per-task audit-logs keys against that prefix
+ * too, so the detail pages' audit-logs sections auto-refresh on
+ * mutations.
+ */
 export function useAuditLogs(): UseAuditLogsResult {
   const query = useQuery<AuditLog[]>({
     queryKey: QUERY_KEYS.auditLogs.all,
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
-      return readLocalAuditLogs().sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    },
+    queryFn: () => auditLogsService.getAuditLogs(),
   })
 
   return {

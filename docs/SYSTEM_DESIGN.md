@@ -685,9 +685,21 @@ Frontend state strategy:
 
 ### Frontend API integration
 
-`TaskManagerPage` and `TaskDetailPage` are both integrated with the
-backend. The pattern below is the reference for any future
-integration:
+All five task-related pages and the global audit trail are
+integrated with the backend:
+
+- `TaskManagerPage` (`/`, `/tasks`)
+- `TaskDetailPage` (`/tasks/:taskId`)
+- `DeletedTasksPage` (`/deleted-tasks`)
+- `DeletedTaskDetailPage` (`/deleted-tasks/:taskId`)
+- `AuditLogsPage` (`/audit-logs`)
+
+The only page still using a local mock is `SelectActorPage`
+(`/select-actor` — `useActors` reads from `FALLBACK_ACTORS`); it
+will be migrated to the backend in a follow-up using
+`GET /api/actors`.
+
+The pattern below is the reference for any future integration:
 
 1. **`features/<feature>/services/<feature>-service.ts`** — owns the
    raw HTTP calls via the shared axios `httpClient`. Each function
@@ -777,6 +789,43 @@ for the 404 code:
 At this point every task-related page reads from the backend; the
 `features/tasks/constants/fallback-tasks.ts` mock seed is no
 longer imported anywhere and can be deleted.
+
+#### Global audit trail — `taskState` navigation
+
+`AuditLogsPage` (`/audit-logs`) is integrated via
+`GET /api/audit-logs`. The endpoint enriches each log with a
+`taskState` field (`"active"` | `"deleted"` | `"unknown"`) computed
+at response time by cross-referencing the tasks repository. The
+field is **not** persisted — it is recomputed on every request so
+it always reflects the current task state.
+
+The `AuditLog` interface declares `taskState?: TaskState` as
+**optional** so the type remains backward-compatible with the
+per-task endpoint (`GET /api/tasks/:taskId/audit-logs`), which
+does not return the field. The global endpoint always populates
+it; per-task endpoint never does.
+
+`getTaskDetailLink` (used by the "View Task" button in
+`AuditLogItem`) prefers `taskState` when present and falls back to
+the `eventType` heuristic otherwise:
+
+| `taskState` | Resulting link |
+|-------------|----------------|
+| `"active"`  | `/tasks/:taskId` |
+| `"deleted"` | `/deleted-tasks/:taskId` |
+| `"unknown"` | `/tasks/:taskId` (best effort; the detail page renders `TaskNotFound` and the user can navigate back) |
+| (absent)   | Fall back to `eventType`: `STATUS_CHANGED → /tasks`, `TASK_DELETED → /deleted-tasks` |
+
+This is more accurate than the previous pure-`eventType` heuristic
+because a `STATUS_CHANGED` log whose task has since been soft-
+deleted correctly navigates to the deleted-tasks detail page
+instead of the active one (where it would 404). The heuristic
+fallback is kept for logs coming from the per-task endpoint.
+
+**Search and event-type filtering** on this page remain
+client-side (`filterAuditLogs`) because the backend does not
+support `?search=` or `?eventType=` on this endpoint — the
+contract is one HTTP fetch, then filter in the browser.
 
 ---
 
