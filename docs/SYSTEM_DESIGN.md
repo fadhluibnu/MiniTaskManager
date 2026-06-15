@@ -656,9 +656,9 @@ Planned routes:
 
 | Path | Purpose |
 |---|---|
-| `/` | Initial route or redirect route |
-| `/select-actor` | Select active actor |
-| `/tasks` | Active task list and task management |
+| `/` | Active task list (default landing) |
+| `/select-actor` | Select or change active actor |
+| `/tasks` | Active task list (alias for `/`) |
 | `/tasks/:taskId` | Active task detail |
 | `/deleted-tasks` | Deleted task list |
 | `/deleted-tasks/:taskId` | Deleted task detail |

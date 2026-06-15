@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+import { ensureDefaultActor } from '@/features/actors/utils/ensure-default-actor'
 import queryClient from '@/shared/lib/query-client'
 import type { ReactNode } from 'react'
 
@@ -8,6 +9,8 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children }: ProvidersProps) {
+  ensureDefaultActor()
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}

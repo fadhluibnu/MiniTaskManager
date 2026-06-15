@@ -8,9 +8,9 @@ import TaskDetailPage from '@/pages/task-detail-page'
 import TaskManagerPage from '@/pages/task-manager-page'
 
 export const router = createBrowserRouter([
-  { path: '/', element: <SelectActorPage /> },
-  { path: '/select-actor', element: <SelectActorPage /> },
+  { path: '/', element: <TaskManagerPage /> },
   { path: '/tasks', element: <TaskManagerPage /> },
+  { path: '/select-actor', element: <SelectActorPage /> },
   { path: '/tasks/:taskId', element: <TaskDetailPage /> },
   { path: '/deleted-tasks', element: <DeletedTasksPage /> },
   { path: '/deleted-tasks/:taskId', element: <DeletedTaskDetailPage /> },

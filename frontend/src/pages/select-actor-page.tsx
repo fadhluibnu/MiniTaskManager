@@ -19,7 +19,7 @@ export default function SelectActorPage() {
 
   const handleContinue = () => {
     if (!selectedActor) return
-    navigate('/tasks')
+    navigate('/')
   }
 
   return (
@@ -33,8 +33,8 @@ export default function SelectActorPage() {
       <section className="w-full max-w-[420px] rounded-2xl border border-slate-200 bg-card p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
         <header className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-950">Choose Actor</h1>
-            <p className="mt-2 text-sm text-slate-500">Select one actor to continue.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950">Select Actor</h1>
+            <p className="mt-2 text-sm text-slate-500">Pick an actor to use for this session.</p>
           </div>
 
           <Badge
