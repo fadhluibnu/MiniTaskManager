@@ -1,219 +1,397 @@
-# 🚀 Template API
+# 🗂️ Mini Task Manager — Backend API
 
-Template Express TypeScript
-
----
-
-## 🧱 Features
-
-✅ Modular architecture (controllers, routes, middlewares, utils)  
-✅ Sequelize ORM (with CLI migrations & models under `/db/`)  
-✅ Zod for schema-based validation  
-✅ Centralized API response formatter  
-✅ Error-handling middleware  
-✅ Environment variable configuration with `dotenv`  
-✅ Ready for REST API projects or as backend for fullstack apps
+REST API untuk Mini Task Manager dengan Audit Log. Dibangun menggunakan **Node.js + Express + TypeScript** dengan persistensi data berbasis file JSON.
 
 ---
 
-## 📂 Folder Structure
+## 📋 Daftar Isi
 
-```
-
-vms-api/
-├── src/
-│   ├── routes/                # Route definitions
-│   │   └── index.js
-│   ├── controllers/           # Controller logic
-│   │   └── example.controller.js
-│   ├── middlewares/           # Global middlewares
-│   ├── utils/                 # Helper functions (api, validation, etc.)
-│   │   ├── api.js
-│   │   └── validation.js
-│   └── config/
-│       └── config.js          # dotenv loader and config manager
-│
-├── db/
-│   ├── models/                # Sequelize models
-│   ├── migrations/            # Migration files
-│   ├── seeders/               # Seeder files
-│   └── config/config.json     # Sequelize DB config
-│
-├── .env.example               # Sample environment variables
-├── .sequelizerc               # Sequelize CLI paths configuration
-├── .gitignore
-├── package.json
-└── README.md
-
-```
+- [Cara Menjalankan](#-cara-menjalankan)
+- [Struktur Folder](#-struktur-folder)
+- [Arsitektur](#-arsitektur)
+- [API Endpoints](#-api-endpoints)
+- [Format Response](#-format-response)
+- [Asumsi yang Diambil](#-asumsi-yang-diambil)
+- [Trade-off yang Dibuat](#-trade-off-yang-dibuat)
+- [Yang Akan Diperbaiki](#-yang-akan-diperbaiki)
+- [Tech Stack](#-tech-stack)
 
 ---
 
-## ⚙️ Installation
+## 🚀 Cara Menjalankan
 
-Clone the repository:
+> **Untuk reviewer non-teknis:** ikuti langkah-langkah di bawah ini secara berurutan. Tidak perlu instalasi database atau layanan eksternal lainnya.
+
+### Prasyarat
+
+Pastikan komputer sudah terinstall:
+
+- **Node.js** versi 18 ke atas — unduh di [nodejs.org](https://nodejs.org)
+- **npm** (sudah termasuk bersama Node.js)
+
+Cek dengan membuka Terminal / Command Prompt dan ketik:
 
 ```bash
-git clone https://github.com/rapiertechintl/vms-api
-cd vms-api
+node -v   # contoh output: v20.11.0
+npm -v    # contoh output: 10.2.4
 ```
 
-Install dependencies:
+---
+
+### Langkah 1 — Masuk ke folder backend
+
+```bash
+cd backend
+```
+
+### Langkah 2 — Install dependensi
 
 ```bash
 npm install
 ```
 
----
+### Langkah 3 — Buat file konfigurasi environment
 
-## 🧾 Environment Setup
+Salin file contoh konfigurasi:
 
-Create a `.env` file based on `.env.example`:
-
+```bash
+cp .env.example .env
 ```
-PORT=5000
+
+Isi default `.env` sudah siap pakai untuk lokal:
+
+```env
 NODE_ENV=development
-
-DB_DIALECT=postgres
-DB_HOST=localhost
-DB_USER=postgres
-DB_PASS=123456
-DB_NAME=vms
+PORT=5050
+ALLOWED_ORIGINS=http://localhost:5173
+DATA_DIR=src/data
 ```
 
----
+> **Catatan:** Tidak perlu mengubah apapun jika dijalankan secara lokal.
 
-## 🧩 Database Setup (Sequelize)
-
-Initialize Sequelize project (if needed):
+### Langkah 4 — Jalankan server
 
 ```bash
-npx sequelize-cli init
+npm run dev
 ```
 
-Run migrations:
+Server akan berjalan di: **http://localhost:5050**
 
-```bash
-npx sequelize-cli db:migrate
+Untuk mengecek apakah server sudah berjalan, buka browser dan kunjungi:
+
+```
+http://localhost:5050/api/status
 ```
 
-Undo migration (optional):
-
-```bash
-npx sequelize-cli db:migrate:undo
-```
-
----
-
-## 🧠 Validation Example (Zod)
-
-Each request schema is defined using **Zod** for strict validation.
-
-Example:
-`src/modules/user/schema.js`
-
-```js
-const { z } = require('zod')
-
-const listSchema = z.object({
-  per_page: z.string().regex(/^\d+$/).transform(Number).optional(),
-  page: z.string().regex(/^\d+$/).transform(Number).optional(),
-  q: z.string().trim().optional().nullable()
-})
-
-module.exports = { listSchema }
-```
-
-And used in controller:
-
-```js
-const { listSchema } = require('./schema')
-const { validateRequest } = require('../../utils/validation')
-
-const query = validateRequest(listSchema, req, 'query')
-```
-
----
-
-## 🧱 API Example
-
-### Controller
-
-```js
-static async getUser(req, res) {
-  try {
-    const query = validateRequest(listSchema, req, 'query')
-    const users = await db.User.findAll()
-    return res.status(200).json(api.results(users, 200))
-  } catch (err) {
-    console.error(err)
-    return res.status(500).json(api(null, 500, { err }))
-  }
-}
-```
-
-### Route
-
-```js
-const router = require('express').Router()
-const UserController = require('../controllers/user.controller')
-
-router.get('/users', UserController.getUser)
-
-module.exports = router
-```
-
----
-
-## 🧰 Scripts
-
-| Command                             | Description                         |
-| ----------------------------------- | ----------------------------------- |
-| `npm run dev`                       | Run development server with Nodemon |
-| `npm start`                         | Run production server               |
-| `npx sequelize-cli db:migrate`      | Run all migrations                  |
-| `npx sequelize-cli db:seed:all`     | Run all seeders                     |
-| `npx sequelize-cli db:migrate:undo` | Rollback last migration             |
-
----
-
-## 🔒 API Response Format
-
-Unified JSON format via `api.results()` and `api()` helpers:
+Jika berhasil, akan muncul respons:
 
 ```json
 {
   "success": true,
-  "message": "OK",
-  "metadata": {},
+  "message": "Server is running",
+  "data": { "status": "ok" }
+}
+```
+
+---
+
+### Menjalankan Frontend Bersamaan
+
+Backend harus dijalankan **terlebih dahulu** sebelum frontend. Buka dua jendela terminal secara terpisah:
+
+| Terminal | Perintah | Keterangan |
+|----------|----------|------------|
+| Terminal 1 | `cd backend && npm run dev` | Menjalankan API server di port 5050 |
+| Terminal 2 | `cd frontend && npm run dev` | Menjalankan UI di port 5173 |
+
+Setelah keduanya berjalan, buka browser dan akses: **http://localhost:5173**
+
+---
+
+### Scripts yang Tersedia
+
+| Perintah | Fungsi |
+|----------|--------|
+| `npm run dev` | Jalankan server development (hot-reload aktif) |
+| `npm run build` | Compile TypeScript ke JavaScript |
+| `npm start` | Jalankan hasil build (production) |
+| `npm run lint` | Jalankan ESLint untuk pengecekan kode |
+| `npm run format` | Format kode dengan Prettier |
+| `npm run typecheck` | Cek tipe TypeScript tanpa compile |
+
+---
+
+## 📂 Struktur Folder
+
+```
+backend/
+├── src/
+│   ├── index.ts                  # Entry point aplikasi
+│   ├── app.ts                    # Setup Express (middleware, routes)
+│   ├── routes.ts                 # Registrasi semua route
+│   ├── config/
+│   │   └── env.ts                # Konfigurasi environment variable
+│   ├── data/
+│   │   ├── actors.json           # Data aktor yang telah ditentukan
+│   │   ├── tasks.json            # Data penyimpanan task
+│   │   └── audit-logs.json       # Data penyimpanan audit log
+│   ├── middlewares/
+│   │   ├── error.middleware.ts   # Global error handler
+│   │   └── not-found.middleware.ts
+│   ├── modules/
+│   │   ├── actors/               # Module aktor (list predefined actors)
+│   │   ├── tasks/                # Module task (CRUD + status update)
+│   │   └── audit-logs/           # Module audit log (global trail)
+│   ├── shared/
+│   │   ├── constants/            # Konstanta bersama
+│   │   ├── lib/
+│   │   │   └── json-storage.ts   # Helper baca/tulis JSON
+│   │   ├── types/                # Definisi tipe TypeScript
+│   │   └── utils/
+│   │       ├── api-response.ts   # Helper format response API
+│   │       ├── app-error.ts      # Custom error class
+│   │       └── async-handler.ts  # Wrapper async untuk controller
+│   └── validators/
+│       └── validate-request.ts   # Validasi request dengan Zod
+├── .env.example
+├── package.json
+└── tsconfig.json
+```
+
+Setiap module mengikuti pola yang konsisten:
+
+```
+[module]/
+├── controller.ts   # Terima request, kirim response
+├── service.ts      # Business logic dan orkestrasi
+├── repository.ts   # Akses data (baca/tulis JSON)
+├── schema.ts       # Skema validasi Zod
+├── type.ts         # Tipe TypeScript spesifik module
+└── index.ts        # Export public
+```
+
+---
+
+## 🏗️ Arsitektur
+
+### Gambaran Umum
+
+```
+Frontend (React + Vite)
+        │
+        │  HTTP Request (JSON)
+        ▼
+Backend (Node.js + Express)
+        │
+        │  Layered Architecture
+        ▼
+┌────────────────────────────┐
+│  Route                     │  Mendefinisikan endpoint URL
+│  → Controller              │  Menerima request, mengirim response
+│  → Service                 │  Business logic & orkestrasi
+│  → Repository              │  Akses data (abstraksi storage)
+│  → JSON Storage Helper     │  Baca/tulis file JSON
+│  → JSON Files              │  Penyimpanan data akhir
+└────────────────────────────┘
+```
+
+### Alur Status Task
+
+Task mengikuti alur satu arah yang ketat:
+
+```
+to_do → pending → in_progress → done
+```
+
+- Tidak bisa melompat status (misalnya `to_do → in_progress`)
+- Tidak bisa mundur (misalnya `in_progress → pending`)
+- `done` adalah status final — tidak bisa diubah lagi
+- Update dengan status yang sama dikembalikan sebagai no-op (`200 OK`) tanpa membuat audit log baru
+
+### Konsistensi Data
+
+Karena JSON tidak mendukung transaksi nyata, konsistensi dijaga dengan cara:
+- Setiap perubahan task dan pembuatan audit log dilakukan dalam satu service flow yang sama
+- Repository hanya mengekspos operasi baca dan tulis
+- Controller tidak pernah mengakses file JSON secara langsung
+
+---
+
+## 🔌 API Endpoints
+
+Base URL: `http://localhost:5050/api`
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| `GET` | `/api/status` | Health check server |
+| `GET` | `/api/actors` | Daftar aktor yang tersedia |
+| `GET` | `/api/tasks` | Semua task aktif (opsional: `?search=keyword`) |
+| `POST` | `/api/tasks` | Buat task baru |
+| `GET` | `/api/tasks/:taskId/detail` | Detail task aktif |
+| `PATCH` | `/api/tasks/:taskId/status` | Update status task |
+| `DELETE` | `/api/tasks/:taskId/delete` | Hapus task (soft delete) |
+| `GET` | `/api/tasks/:taskId/audit-logs` | Audit log per task |
+| `GET` | `/api/tasks/deleted` | Semua task yang sudah dihapus |
+| `GET` | `/api/tasks/deleted/:taskId/detail` | Detail task yang sudah dihapus |
+| `GET` | `/api/audit-logs` | Global audit trail |
+
+Dokumentasi API lengkap tersedia di [`docs/API_DOCUMENTATION.md`](../docs/API_DOCUMENTATION.md).
+
+---
+
+## 📦 Format Response
+
+Semua endpoint menggunakan format JSON yang konsisten:
+
+**Success:**
+```json
+{
+  "success": true,
+  "message": "Task created successfully",
   "data": { ... }
 }
 ```
 
-Error example:
-
+**Error:**
 ```json
 {
   "success": false,
-  "message": "Validation failed",
-  "metadata": {},
-  "data": null
+  "message": "Actor not found",
+  "data": null,
+  "error": {
+    "code": "ACTOR_NOT_FOUND"
+  }
 }
 ```
 
 ---
 
-## 🧑‍💻 Author
+## 🧠 Asumsi yang Diambil
+
+1. **Tidak ada autentikasi.** Identitas pengguna direpresentasikan oleh aktor yang dipilih dari dropdown. Ini adalah keputusan sadar karena autentikasi berada di luar scope take-home task ini.
+
+2. **Aktor bersifat statis.** Data aktor disimpan di `src/data/actors.json` dan tidak dapat dibuat atau dihapus melalui API. Backend memvalidasi bahwa `actorId` yang dikirim ada di daftar ini.
+
+3. **Task selalu dimulai dari `to_do`.** Status awal sudah dikunci di server — tidak ada cara untuk membuat task dengan status selain `to_do`.
+
+4. **Tidak ada audit log untuk pembuatan task.** Informasi siapa yang membuat task sudah disimpan di field `createdByActorId` dan `createdByActorName` pada task itu sendiri, sehingga audit log dianggap redundan untuk event pembuatan.
+
+5. **Penghapusan adalah soft delete.** Task yang dihapus tidak benar-benar dihapus dari file JSON — field `deletedAt` diisi dengan timestamp penghapusan. Ini memungkinkan audit log dari task yang dihapus tetap bisa ditelusuri.
+
+6. **Konsistensi data dijaga di level service.** Karena JSON tidak memiliki transaksi, mutasi task dan penulisan audit log dilakukan dalam satu service flow untuk meminimalkan risiko inkonsistensi.
+
+7. **Aplikasi ini bukan untuk production.** Ini dirancang khusus untuk assessment — mudah dijalankan secara lokal tanpa dependensi eksternal.
 
 ---
 
-## 🪄 License
+## ⚖️ Trade-off yang Dibuat
 
-This project is licensed under the **MIT License**.
-Feel free to use and modify for your own backend projects.
+### 1. JSON File vs Database Sesungguhnya
+
+**Dipilih:** JSON file persistence
+
+**Alasan:** Reviewer tidak perlu menginstall PostgreSQL, MySQL, atau menjalankan Docker hanya untuk menilai project ini. Cukup `npm install` dan langsung bisa jalan.
+
+**Konsekuensi:** Tidak ada transaction support yang sesungguhnya. Jika server crash tepat setelah task diupdate tapi sebelum audit log ditulis, data bisa inkonsisten. Pada production, ini harus diganti dengan database dan transaksi nyata.
 
 ---
 
-> 💡 _Tip:_ Fork this repo as your boilerplate backend for all new projects — just replace `/modules` content with your own logic, and you’re ready to build production-grade APIs!
+### 2. Aktor Statis (Hardcoded) vs Manajemen Aktor Dinamis
+
+**Dipilih:** Aktor didefinisikan di `actors.json` dan tidak bisa diubah melalui API.
+
+**Alasan:** Autentikasi berada di luar scope. Pendekatan ini cukup untuk mendemonstrasikan validasi identitas tanpa memerlukan sistem login.
+
+**Konsekuensi:** Tidak bisa menambah atau menghapus aktor tanpa mengedit file JSON secara manual.
 
 ---
+
+### 3. No-op untuk Same-Status Update
+
+**Dipilih:** Update status dengan nilai yang sama mengembalikan `200 OK` tanpa membuat audit log baru.
+
+**Alasan:** Perilaku idempotent lebih aman dan tidak menghasilkan audit log yang duplikat dan menyesatkan.
+
+**Konsekuensi:** Klien perlu membaca field `changed: false` untuk mengetahui bahwa tidak ada perubahan yang terjadi.
+
+---
+
+### 4. Denormalized Snapshots di Audit Log
+
+**Dipilih:** Audit log menyimpan `taskTitle` dan `actorName` sebagai snapshot pada saat event terjadi.
+
+**Alasan:** Jika nama aktor atau judul task berubah di masa depan, audit log tetap dapat dipahami karena sudah menyimpan nilainya saat itu.
+
+**Konsekuensi:** Terdapat duplikasi data antara audit log dan task, tetapi ini adalah trade-off yang disengaja untuk keterbacaan.
+
+---
+
+### 5. Action-Suffix URL Convention
+
+**Dipilih:** Endpoint menggunakan suffix aksi, misalnya `DELETE /api/tasks/:taskId/delete` bukan `DELETE /api/tasks/:taskId`.
+
+**Alasan:** URL menjadi self-describing dan lebih mudah di-debug di network log. Ini juga menghindari ambiguitas saat route conflict dengan endpoint lain seperti `GET /api/tasks/deleted`.
+
+---
+
+## 🔮 Yang Akan Diperbaiki
+
+Jika proyek ini dikembangkan lebih lanjut ke production, berikut yang akan ditingkatkan:
+
+| # | Area | Ringkasan |
+|---|------|-----------|
+| 1 | **Database** | Ganti JSON file dengan PostgreSQL/MySQL + transaksi nyata |
+| 2 | **Autentikasi** | Ganti actor dropdown dengan JWT / session-based auth |
+| 3 | **Pagination & Filtering** | Tambahkan pagination dan filter berdasarkan status, aktor, waktu |
+| 4 | **Security** | Rate limiting per IP + validasi content-type ketat |
+| 5 | **Testing** | Unit & integration test untuk validasi status, audit log, actor |
+| 6 | **Soft Delete** | Tambahkan fitur restore task beserta audit log-nya |
+| 7 | **Konkurensi** | Optimistic locking / row-level lock untuk cegah race condition |
+| 8 | **Realtime** | WebSocket / SSE agar perubahan langsung terlihat di semua browser |
+
+Detail masing-masing poin:
+
+1. **Ganti JSON dengan Database Sesungguhnya**
+   Migrasi ke PostgreSQL atau MySQL dengan ORM seperti Prisma atau Drizzle. Mutasi task dan pembuatan audit log dibungkus dalam satu transaksi database untuk konsistensi yang sesungguhnya.
+
+2. **Tambahkan Autentikasi**
+   Implementasi JWT atau session-based auth sehingga identitas pengguna tidak lagi dipilih manual dari dropdown, melainkan diverifikasi oleh sistem.
+
+3. **Pagination dan Filtering**
+   Untuk task list dan audit log yang besar, tambahkan pagination (cursor-based atau offset-based) dan filtering berdasarkan status, aktor, atau rentang waktu.
+
+4. **Rate Limiting dan Security Hardening**
+   Tambahkan rate limiting per IP, sanitasi input yang lebih ketat, dan validasi content-type pada semua endpoint mutasi.
+
+5. **Unit dan Integration Tests**
+   Tambahkan test coverage menggunakan Vitest atau Jest, khususnya untuk:
+   - Status transition validation
+   - Audit log creation logic
+   - Actor validation
+
+6. **Soft Delete yang Lebih Lengkap**
+   Tambahkan fitur restore task yang sudah dihapus, beserta audit log untuk event restore.
+
+7. **Locking Mekanisme untuk Konkurensi**
+   Implementasi optimistic locking atau row-level lock untuk mencegah race condition saat beberapa request mengubah task yang sama secara bersamaan.
+
+8. **Realtime Updates**
+   Gunakan WebSocket atau Server-Sent Events (SSE) agar perubahan task dan audit log langsung terlihat di semua browser yang membuka aplikasi yang sama.
+
+---
+
+## 🛠️ Tech Stack
+
+| Area | Teknologi | Versi |
+|------|-----------|-------|
+| Runtime | Node.js | ≥ 18 |
+| Framework | Express | ^5.1.0 |
+| Bahasa | TypeScript | ^5.8.0 |
+| Validasi | Zod | ^4.1.12 |
+| ID Generator | CUID | ^3.0.0 |
+| Security Headers | Helmet | ^8.1.0 |
+| CORS | cors | ^2.8.5 |
+| Logger | Morgan | ^1.10.1 |
+| Dev Runner | tsx (watch mode) | ^4.19.0 |
+| Formatter | Prettier | ^3.6.2 |
+| Linter | ESLint | ^9.39.1 |
