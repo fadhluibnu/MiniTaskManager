@@ -8,13 +8,6 @@ interface ValidateRequestOptions {
   query?: ZodSchema
 }
 
-/**
- * Middleware factory that validates request body, params, and/or query using Zod schemas.
- * Returns a 400 response with the first validation error if any check fails.
- *
- * Usage:
- *   router.post('/tasks', validateRequest({ body: createTaskSchema }), taskController.create)
- */
 function validateRequest(schemas: ValidateRequestOptions): RequestHandler {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
@@ -27,7 +20,12 @@ function validateRequest(schemas: ValidateRequestOptions): RequestHandler {
       }
 
       if (schemas.query) {
-        req.query = schemas.query.parse(req.query) as typeof req.query
+        const parsed = schemas.query.parse(req.query) as Record<string, unknown>
+        const query = req.query as Record<string, unknown>
+        for (const key of Object.keys(query)) {
+          delete query[key]
+        }
+        Object.assign(query, parsed)
       }
 
       next()
@@ -36,7 +34,12 @@ function validateRequest(schemas: ValidateRequestOptions): RequestHandler {
         const firstIssue = err.issues[0]
         const field =
           firstIssue.path.length > 0 ? firstIssue.path.join('.') : 'input'
-        sendError(res, `${field}: ${firstIssue.message}`, 400, err.issues)
+        sendError(res, {
+          message: `${field}: ${firstIssue.message}`,
+          statusCode: 400,
+          code: 'VALIDATION_ERROR',
+          details: err.issues
+        })
         return
       }
 

@@ -736,7 +736,7 @@ Suggested endpoints:
 | GET | `/api/tasks` | Get all active tasks |
 | POST | `/api/tasks` | Create a new task |
 | PATCH | `/api/tasks/:id/status` | Update task status |
-| DELETE | `/api/tasks/:id` | Delete task |
+| DELETE | `/api/tasks/:id/delete` | Delete task |
 | GET | `/api/tasks/:id/audit-logs` | Get audit logs for a task |
 | GET | `/api/audit-logs` | Get all audit logs |
 | GET | `/api/actors` | Get predefined actor list |
@@ -747,7 +747,7 @@ Expected actor usage by endpoint:
 |---|---|---|
 | `POST /api/tasks` | Yes | Store creator metadata |
 | `PATCH /api/tasks/:id/status` | Yes | Store audit actor |
-| `DELETE /api/tasks/:id` | Yes | Store audit actor |
+| `DELETE /api/tasks/:id/delete` | Yes | Store audit actor |
 | `GET /api/tasks` | No | Read-only |
 | `GET /api/tasks/:id/audit-logs` | No | Read-only |
 | `GET /api/audit-logs` | No | Read-only |

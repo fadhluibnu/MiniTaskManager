@@ -14,10 +14,11 @@ This document defines the backend development rules, conventions, and architectu
 | 4 | Repeated logic in controllers must be extracted into **services, repositories, helpers, or middleware**. |
 | 5 | All APIs must be **documented** in `docs/API_DOCUMENTATION.md` with method, path, body, params, and response examples. |
 | 6 | **HTTP methods** must match the action: GET for read, POST for create, PATCH/PUT for update, DELETE for delete. |
-| 7 | Use **ESLint** for linting and **Prettier** for formatting. Run both before committing. |
-| 8 | Use **environment variables** for all configuration values. Never hardcode API ports, paths, or settings. |
-| 9 | Do not access `process.env` directly across files — use `src/config/env.ts` instead. |
-| 10 | Every third-party or shared integration must be placed in `src/shared/lib/` or `src/shared/utils/`. |
+| 7 | **Action-suffix URL convention** — endpoints that take a parent resource ID (e.g. `:taskId`, `:auditLogId`) must not end with the bare ID. Always append an action name (e.g. `/delete`, `/status`, `/audit-logs`). This makes URLs self-describing and easier to debug in network logs. |
+| 8 | Use **ESLint** for linting and **Prettier** for formatting. Run both before committing. |
+| 9 | Use **environment variables** for all configuration values. Never hardcode API ports, paths, or settings. |
+| 10 | Do not access `process.env` directly across files — use `src/config/env.ts` instead. |
+| 11 | Every third-party or shared integration must be placed in `src/shared/lib/` or `src/shared/utils/`. |
 
 ---
 

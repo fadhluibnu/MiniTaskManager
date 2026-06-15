@@ -1,49 +1,52 @@
 import { Response } from 'express'
 
-/**
- * Consistent API response shape for all endpoints.
- */
 interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data: T | null
-  error?: unknown
+  error?: { code: string; details: unknown }
 }
 
-/**
- * Send a successful response.
- */
+interface SendSuccessOptions<T> {
+  message: string
+  data: T
+  statusCode?: number
+}
+
+
 function sendSuccess<T>(
   res: Response,
-  data: T,
-  message = 'Success',
-  statusCode = 200
+  options: SendSuccessOptions<T>
 ): Response {
   const body: ApiResponse<T> = {
     success: true,
-    message,
-    data
+    message: options.message,
+    data: options.data
   }
-  return res.status(statusCode).json(body)
+  return res.status(options.statusCode ?? 200).json(body)
 }
 
-/**
- * Send an error response.
- */
-function sendError(
-  res: Response,
-  message: string,
-  statusCode = 500,
-  error?: unknown
-): Response {
+
+interface SendErrorOptions {
+  message: string
+  statusCode?: number
+  code?: string
+  details?: unknown
+}
+
+
+function sendError(res: Response, options: SendErrorOptions): Response {
   const body: ApiResponse<null> = {
     success: false,
-    message,
+    message: options.message,
     data: null,
-    ...(error !== undefined && { error })
+    error: {
+      code: options.code ?? 'INTERNAL_SERVER_ERROR',
+      details: options.details ?? null
+    }
   }
-  return res.status(statusCode).json(body)
+  return res.status(options.statusCode ?? 500).json(body)
 }
 
 export { sendSuccess, sendError }
-export type { ApiResponse }
+export type { ApiResponse, SendSuccessOptions, SendErrorOptions }

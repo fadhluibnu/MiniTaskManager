@@ -397,8 +397,10 @@ Examples:
 | POST | `/api/tasks` | Create a new task |
 | GET | `/api/tasks/:taskId` | Get active task detail |
 | PATCH | `/api/tasks/:taskId/status` | Update task status |
-| DELETE | `/api/tasks/:taskId` | Soft delete task |
+| DELETE | `/api/tasks/:taskId/delete` | Soft delete task |
 | GET | `/api/tasks/:taskId/audit-logs` | Get task audit logs |
+
+**URL convention (action suffix):** endpoints that take a resource ID (e.g. `:taskId`) must end with an action name, not the bare ID. This makes URLs self-describing and easier to debug in network logs. Example: `DELETE /api/tasks/:taskId/delete` instead of `DELETE /api/tasks/:taskId`. The other implemented endpoints (`PATCH /:taskId/status`, `GET /:taskId/audit-logs`) already follow this convention.
 
 Route declaration note:
 
@@ -489,7 +491,7 @@ Rules:
 ### Delete Task
 
 ```http
-DELETE /api/tasks/:taskId
+DELETE /api/tasks/:taskId/delete
 ```
 
 ```json

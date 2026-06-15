@@ -1,17 +1,17 @@
-/**
- * Custom error class for operational (expected) errors.
- * Use this to signal known error conditions with a specific HTTP status code.
- *
- * Usage:
- *   throw new AppError('Task not found', 404)
- */
+
 class AppError extends Error {
   public readonly statusCode: number
+  public readonly code: string
   public readonly isOperational: boolean
 
-  constructor(message: string, statusCode = 500) {
+  constructor(
+    message: string,
+    statusCode = 500,
+    code = 'INTERNAL_SERVER_ERROR'
+  ) {
     super(message)
     this.statusCode = statusCode
+    this.code = code
     this.isOperational = true
 
     // Maintains proper stack trace in V8
