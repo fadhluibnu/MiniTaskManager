@@ -86,3 +86,22 @@ MiniTaskManager/
 - **Node.js** versi 18 ke atas — unduh di [nodejs.org](https://nodejs.org)
 - **npm** (sudah termasuk bersama Node.js)
 - Tidak perlu Docker, PostgreSQL, atau database lainnya
+
+---
+
+## 🔮 Yang Akan Diperbaiki
+
+Berikut hal-hal yang akan ditingkatkan jika proyek ini dikembangkan lebih lanjut ke production:
+
+| # | Area | Ringkasan |
+|---|------|-----------|
+| 1 | **Database** | Ganti JSON file dengan PostgreSQL/MySQL + transaksi nyata |
+| 2 | **Autentikasi** | Ganti actor dropdown dengan JWT / session-based auth |
+| 3 | **Pagination & Filtering** | Tambahkan pagination dan filter berdasarkan status, aktor, waktu |
+| 4 | **Security** | Rate limiting per IP + validasi content-type ketat |
+| 5 | **Testing** | Unit & integration test untuk validasi status, audit log, actor |
+| 6 | **Soft Delete** | Tambahkan fitur restore task beserta audit log-nya |
+| 7 | **Konkurensi** | Optimistic locking / row-level lock untuk cegah race condition |
+| 8 | **Realtime** | WebSocket / SSE agar perubahan langsung terlihat di semua browser |
+
+> Detail penjelasan tiap poin tersedia di [`backend/README.md → Yang Akan Diperbaiki`](backend/README.md#-yang-akan-diperbaiki).
