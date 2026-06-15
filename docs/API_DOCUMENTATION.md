@@ -618,7 +618,8 @@ GET /api/audit-logs
       "eventType": "TASK_DELETED",
       "fromStatus": "in_progress",
       "toStatus": null,
-      "createdAt": "2026-06-15T05:00:00.000Z"
+      "createdAt": "2026-06-15T05:00:00.000Z",
+      "taskState": "deleted"
     },
     {
       "id": "audit_002",
@@ -629,11 +630,33 @@ GET /api/audit-logs
       "eventType": "TASK_DELETED",
       "fromStatus": "in_progress",
       "toStatus": null,
-      "createdAt": "2026-06-15T04:10:00.000Z"
+      "createdAt": "2026-06-15T04:10:00.000Z",
+      "taskState": "deleted"
     }
   ]
 }
 ```
+
+**`taskState` enrichment**
+
+Each log in the response includes a `taskState` field, computed at
+response time by cross-referencing the tasks repository. The field is
+**not** persisted in `audit-logs.json` — it is recomputed on every
+request so it always reflects the current task state.
+
+| Value | When |
+|-------|------|
+| `"active"` | The related task still exists and has `deletedAt === null`. |
+| `"deleted"` | The related task exists and has been soft-deleted. |
+| `"unknown"` | The related task cannot be found in `tasks.json` (orphaned log — defensive case). |
+
+The frontend uses `taskState` to determine the navigation target of
+the "View Task" button:
+
+- `taskState === "active"` → navigate to `/tasks/:taskId`
+- `taskState === "deleted"` → navigate to `/deleted-tasks/:taskId`
+- `taskState === "unknown"` → hide the "View Task" button or disable
+  navigation
 
 **Audit log event types**
 

@@ -433,6 +433,15 @@ newest → oldest
 
 Per-task audit logs can also use newest-to-oldest for UI consistency.
 
+**Global audit trail response shape:** each log in `GET /api/audit-logs`
+includes an enriched `taskState` field (`"active"` | `"deleted"` | `"unknown"`)
+computed at response time by cross-referencing the tasks repository. The
+field is **not** persisted in `audit-logs.json` — it is recomputed on
+every request so it always reflects the current task state. This is what
+allows the frontend "View Task" button to navigate to the correct
+detail page (`/tasks/:taskId` for active, `/deleted-tasks/:taskId` for
+deleted) regardless of when the audit log was originally created.
+
 ---
 
 ## 13. Request Body Design
@@ -676,9 +685,9 @@ Frontend state strategy:
 
 ### Frontend API integration
 
-The `TaskManagerPage` (`/` and `/tasks`) is the first feature fully
-integrated with the backend. The pattern below is the reference for
-any future integration:
+`TaskManagerPage` and `TaskDetailPage` are both integrated with the
+backend. The pattern below is the reference for any future
+integration:
 
 1. **`features/<feature>/services/<feature>-service.ts`** — owns the
    raw HTTP calls via the shared axios `httpClient`. Each function
@@ -698,6 +707,30 @@ Errors thrown by services are normalized to `ApiError` (see
 `FRONTEND_RULES.md §8`) so `onError` handlers can rely on
 `error.code`, `error.status`, and `error.message` regardless of
 whether the failure came from the backend envelope or axios itself.
+
+#### Detail-page error handling
+
+`useTask` (used by `TaskDetailPage`) is a special case that
+demonstrates how to use `ApiError.code` for branching instead of
+treating all errors the same:
+
+- `TASK_NOT_FOUND` (404) is caught inside the `queryFn` and mapped
+  to `task: null`, so the page can render the dedicated
+  `TaskNotFound` component without needing to inspect the error
+  code itself.
+- Other errors (500, network) bubble up to React Query as a thrown
+  `ApiError`. The hook exposes `isError` and `error` so the page
+  can render a separate full-page `TaskDetailError` component with
+  a Retry button.
+- The audit-logs section follows the same pattern at a smaller
+  scale: `useTaskAuditLogs` exposes `isError` and `error`, and the
+  `TaskAuditLogsSection` renders an inline error state with retry
+  while leaving the rest of the page intact.
+
+Because the audit-logs endpoint (`GET /api/tasks/:taskId/audit-logs`)
+returns logs for any task ID (active or deleted), the
+`useTaskAuditLogs` hook is shared between `TaskDetailPage` and
+`DeletedTaskDetailPage` — integrating it once benefits both pages.
 
 ---
 
