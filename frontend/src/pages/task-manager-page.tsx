@@ -21,9 +21,6 @@ export default function TaskManagerPage() {
   const actor = useStoredActor()
   const hasActor = actor !== null
   const [searchQuery, setSearchQuery] = useState('')
-  // Search runs server-side via `?search=`. The hook's query key
-  // includes the search term, so each unique search gets its own
-  // cache entry and clearing the search triggers a fresh `GET /tasks`.
   const { tasks, isLoading, refetch } = useTasks({ search: searchQuery })
   const { mutate: createTask, isPending: isCreating } = useCreateTask()
   const { mutate: updateStatus } = useUpdateTaskStatus()
@@ -108,11 +105,13 @@ export default function TaskManagerPage() {
         </div>
       </div>
 
-      <DeleteTaskDialog
-        task={taskToDelete}
-        onCancel={() => setTaskToDelete(null)}
-        onConfirm={handleDeleteConfirm}
-      />
+      {taskToDelete && (
+        <DeleteTaskDialog
+          task={taskToDelete}
+          onCancel={() => setTaskToDelete(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </main>
   )
 }

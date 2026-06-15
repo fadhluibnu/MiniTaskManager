@@ -6,6 +6,7 @@ import {
   deleteTaskSchema,
   getTasksQuerySchema,
   taskParamsSchema,
+  updateTaskSchema,
   updateTaskStatusSchema
 } from './schema'
 
@@ -41,6 +42,11 @@ router.patch(
   '/:taskId/status',
   validateRequest({ params: taskParamsSchema, body: updateTaskStatusSchema }),
   taskController.updateTaskStatus
+)
+router.patch(
+  '/:taskId',
+  validateRequest({ params: taskParamsSchema, body: updateTaskSchema }),
+  taskController.updateTask
 )
 router.delete(
   '/:taskId/delete',

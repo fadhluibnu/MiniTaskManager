@@ -11,6 +11,8 @@ import type {
   DeleteTaskInput,
   DeleteTaskResult,
   GetTasksQuery,
+  UpdateTaskInput,
+  UpdateTaskResult,
   UpdateTaskStatusInput,
   UpdateTaskStatusResult
 } from './type'
@@ -158,12 +160,55 @@ function deleteTask(taskId: string, input: DeleteTaskInput): DeleteTaskResult {
   return { task: deletedTask, auditLog }
 }
 
+function updateTask(taskId: string, input: UpdateTaskInput): UpdateTaskResult {
+  // Validate the actor even though no audit log is generated — symmetry
+  // with create / updateStatus / delete and a hard guard against unknown
+  // actor IDs being stored elsewhere in the future.
+  actorService.ensureActorExists(input.actorId)
+
+  // 404 TASK_NOT_FOUND when the task is missing OR soft-deleted (the
+  // helper throws the same error for both cases, matching this endpoint's
+  // contract).
+  const task = findActiveTaskOrThrow(taskId)
+
+  // Zod has already trimmed; normalise empty description to undefined so
+  // a description-less task and a payload of `""` are treated as equal.
+  const nextTitle = input.title
+  const nextDescription =
+    input.description && input.description.length > 0
+      ? input.description
+      : undefined
+
+  const titleUnchanged = task.title === nextTitle
+  const descriptionUnchanged =
+    (task.description ?? undefined) === nextDescription
+  if (titleUnchanged && descriptionUnchanged) {
+    return { changed: false, task }
+  }
+
+  // No audit log: this endpoint intentionally does not call
+  // commitTaskAndAuditLog. The spread preserves status, createdBy*,
+  // deletedAt, and deletedBy* — only title / description / updatedAt
+  // change.
+  const updatedTask: Task = {
+    ...task,
+    title: nextTitle,
+    description: nextDescription,
+    updatedAt: new Date().toISOString()
+  }
+
+  const tasks = replaceTask(taskRepository.findAll(), updatedTask)
+  taskRepository.saveAll(tasks)
+  return { changed: true, task: updatedTask }
+}
+
 export const taskService = {
   getActiveTasks,
   getActiveTaskById: findActiveTaskOrThrow,
   getDeletedTasks,
   getDeletedTaskById,
   createTask,
+  updateTask,
   updateTaskStatus,
   deleteTask
 }

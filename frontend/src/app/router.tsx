@@ -5,6 +5,7 @@ import DeletedTasksPage from '@/pages/deleted-tasks-page'
 import NotFoundPage from '@/pages/not-found-page'
 import SelectActorPage from '@/pages/select-actor-page'
 import TaskDetailPage from '@/pages/task-detail-page'
+import TaskEditPage from '@/pages/task-edit-page'
 import TaskManagerPage from '@/pages/task-manager-page'
 
 export const router = createBrowserRouter([
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
   { path: '/tasks', element: <TaskManagerPage /> },
   { path: '/select-actor', element: <SelectActorPage /> },
   { path: '/tasks/:taskId', element: <TaskDetailPage /> },
+  { path: '/tasks/:taskId/edit', element: <TaskEditPage /> },
   { path: '/deleted-tasks', element: <DeletedTasksPage /> },
   { path: '/deleted-tasks/:taskId', element: <DeletedTaskDetailPage /> },
   { path: '/audit-logs', element: <AuditLogsPage /> },

@@ -98,7 +98,7 @@ The following items are intentionally out of scope:
 5. WebSocket-based updates.
 6. Task assignment.
 7. Task comments.
-8. Task editing after creation.
+8. Task editing after creation. *(Amended: simple title/description editing of active tasks is now in scope via `PATCH /api/tasks/:taskId`. See §13.8 below. Status cannot be edited through this endpoint, and edits do not create audit log entries.)*
 9. File attachments.
 10. Notification system.
 11. Search and advanced filtering.
@@ -486,6 +486,26 @@ Acceptance criteria:
 3. Global audit trail shows logs for deleted tasks.
 4. Audit logs are displayed chronologically.
 5. Audit logs cannot be edited or deleted from the UI.
+
+---
+
+### 13.8 Edit Task Title and Description
+
+Users can edit the title and description of an active task. This is
+a deliberate, narrow addition to the original scope (see §6 #8 and
+§19 #5 for the prior non-goal).
+
+Acceptance criteria:
+
+1. User can edit the title and description of an active task from the Task Manager page.
+2. User can edit the title and description of an active task from the Task Detail page.
+3. Edited values appear updated in both the task list and the task detail page.
+4. `updatedAt` is bumped only when title or description actually changed.
+5. Submitting the same values returns `200 OK` with `changed: false` and leaves `updatedAt` unchanged.
+6. Deleted tasks cannot be edited — the edit endpoint returns `404 TASK_NOT_FOUND` for them.
+7. Status cannot be changed through the edit endpoint — use the status transition endpoint.
+8. No audit log entry is created for an edit. Audit logs are still produced only for status changes and task deletion.
+9. Backend rejects edit requests that omit `actorId` or submit an unknown `actorId`.
 
 ---
 

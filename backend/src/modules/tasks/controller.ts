@@ -47,6 +47,17 @@ export const taskController = {
     })
   }),
 
+  updateTask: asyncHandler(async (req, res) => {
+    const taskId = req.params.taskId as string
+    const result = await taskService.updateTask(taskId, req.body)
+    return sendSuccess(res, {
+      message: result.changed
+        ? 'Task updated successfully'
+        : 'No changes to update',
+      data: result
+    })
+  }),
+
   updateTaskStatus: asyncHandler(async (req, res) => {
     const taskId = req.params.taskId as string
     const result = await taskService.updateTaskStatus(taskId, req.body)

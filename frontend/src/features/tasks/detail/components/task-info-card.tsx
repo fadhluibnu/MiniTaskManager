@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/shared/utils/format-date'
 import type { Task } from '../../types/task'
@@ -39,6 +40,13 @@ export default function TaskInfoCard({
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
+          <Link
+            to={`/tasks/${task.id}/edit`}
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-50"
+          >
+            Edit Task
+          </Link>
+
           <Button
             type="button"
             onClick={onMove}

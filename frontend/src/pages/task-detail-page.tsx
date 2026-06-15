@@ -100,11 +100,13 @@ export default function TaskDetailPage() {
         )}
       </div>
 
-      <DeleteTaskDialog
-        task={taskToDelete}
-        onCancel={() => setTaskToDelete(null)}
-        onConfirm={handleDeleteConfirm}
-      />
+      {taskToDelete && (
+        <DeleteTaskDialog
+          task={taskToDelete}
+          onCancel={() => setTaskToDelete(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </main>
   )
 }

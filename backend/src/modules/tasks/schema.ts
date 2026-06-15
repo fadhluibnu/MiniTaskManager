@@ -22,6 +22,20 @@ export const updateTaskStatusSchema = z.object({
   })
 })
 
+export const updateTaskSchema = z.object({
+  actorId: z.string().min(1, 'Actor ID is required'),
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Title is required')
+    .max(255, 'Title must be at most 255 characters'),
+  description: z
+    .string()
+    .trim()
+    .max(2000, 'Description must be at most 2000 characters')
+    .optional()
+})
+
 export const deleteTaskSchema = z.object({
   actorId: z.string().min(1, 'Actor ID is required')
 })

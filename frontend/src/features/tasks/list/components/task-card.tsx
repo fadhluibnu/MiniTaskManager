@@ -13,7 +13,12 @@ interface TaskCardProps {
   onDelete: (task: Task) => void
 }
 
-export default function TaskCard({ task, isActionDisabled, onMove, onDelete }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  isActionDisabled,
+  onMove,
+  onDelete,
+}: TaskCardProps) {
   const nextStatus = getNextStatus(task.status)
   const moveLabel = nextStatus ? `Move to ${formatStatus(nextStatus)}` : 'Done'
 
@@ -50,6 +55,13 @@ export default function TaskCard({ task, isActionDisabled, onMove, onDelete }: T
             className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-950 transition hover:bg-slate-50"
           >
             Detail
+          </Link>
+
+          <Link
+            to={`/tasks/${task.id}/edit`}
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-950 transition hover:bg-slate-50"
+          >
+            Edit
           </Link>
 
           <Button

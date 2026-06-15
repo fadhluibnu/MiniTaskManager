@@ -29,6 +29,26 @@ export interface UpdateTaskStatusVars {
   toStatus: TaskStatus
 }
 
+/**
+ * Input vars for the `updateTask` service call. The backend accepts
+ * `actorId`, `title`, and an optional `description`; `taskId` is
+ * extracted from the URL.
+ */
+export interface UpdateTaskInput {
+  taskId: string
+  actorId: string
+  title: string
+  description?: string
+}
+
+/**
+ * Mirrors the backend `UpdateTaskResult` union.
+ *
+ * - `changed: true`  → title or description actually differed, `updatedAt` was bumped.
+ * - `changed: false` → no-op (identical values), `updatedAt` left alone.
+ */
+export type UpdateTaskResult = { changed: true; task: Task } | { changed: false; task: Task }
+
 export interface DeleteTaskVars {
   taskId: string
   actorId: string
@@ -91,6 +111,18 @@ async function updateTaskStatus(vars: UpdateTaskStatusVars): Promise<UpdateTaskS
   return extractApiData<UpdateTaskStatusResult>(response)
 }
 
+/**
+ * Edits a task's title and/or description. Status cannot be changed
+ * through this endpoint; use `updateTaskStatus` for status transitions.
+ *
+ * The backend intentionally does not create an audit log for edits.
+ */
+async function updateTask(payload: UpdateTaskInput): Promise<UpdateTaskResult> {
+  const { taskId, ...body } = payload
+  const response = await httpClient.patch(`/tasks/${taskId}`, body)
+  return extractApiData<UpdateTaskResult>(response)
+}
+
 async function deleteTask(vars: DeleteTaskVars): Promise<DeleteTaskResult> {
   const response = await httpClient.delete(`/tasks/${vars.taskId}/delete`, {
     data: { actorId: vars.actorId },
@@ -105,6 +137,7 @@ export const taskService = {
   getDeletedTasks,
   getDeletedTaskById,
   createTask,
+  updateTask,
   updateTaskStatus,
   deleteTask,
 }

@@ -360,6 +360,111 @@ Content-Type: application/json
 
 ---
 
+### `PATCH /api/tasks/:taskId`
+
+Edits a task's `title` and/or `description`. Behavior:
+
+- **Actual change detected** (title or description differs from current) → `200 OK` with `{ changed: true, task: <updated task with bumped updatedAt> }`. `updatedAt` is bumped.
+- **No change** (identical values submitted) → `200 OK` with `{ changed: false, task: <unchanged task> }`. `updatedAt` is NOT bumped.
+- **Task not found** OR **task soft-deleted** → `404` `TASK_NOT_FOUND`.
+- **Empty title / oversized title or description** → `400` `VALIDATION_ERROR`.
+- **Unknown actor** → `404` `ACTOR_NOT_FOUND`.
+
+Status **cannot** be modified through this endpoint — use
+`PATCH /api/tasks/:taskId/status` for status transitions. The Zod
+schema does not include `status`; any `status` field in the body is
+ignored.
+
+No audit log is created by this endpoint. The audit trail remains
+limited to `STATUS_CHANGED` and `TASK_DELETED` events.
+
+`createdByActorId`, `createdByActorName`, `deletedAt`,
+`deletedByActorId`, and `deletedByActorName` are preserved on every
+edit.
+
+**Request**
+
+```
+PATCH /api/tasks/task_001
+Content-Type: application/json
+```
+
+```json
+{
+  "actorId": "john.doe",
+  "title": "Buy groceries (milk, eggs)",
+  "description": "Updated list with prices"
+}
+```
+
+**Body fields**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `actorId` | string | yes | Must exist in the predefined actor list. |
+| `title` | string | yes | Trimmed. 1–255 characters. |
+| `description` | string | no | Trimmed. Up to 2000 characters. Omit or send `""` to clear. |
+
+**Response — 200 OK (changed)**
+
+```json
+{
+  "success": true,
+  "message": "Task updated successfully",
+  "data": {
+    "changed": true,
+    "task": {
+      "id": "task_001",
+      "title": "Buy groceries (milk, eggs)",
+      "description": "Updated list with prices",
+      "status": "to_do",
+      "createdByActorId": "john.doe",
+      "createdByActorName": "John Doe",
+      "createdAt": "2026-06-15T02:10:00.000Z",
+      "updatedAt": "2026-06-15T04:30:00.000Z",
+      "deletedAt": null,
+      "deletedByActorId": null,
+      "deletedByActorName": null
+    }
+  }
+}
+```
+
+**Response — 200 OK (no change)**
+
+```json
+{
+  "success": true,
+  "message": "No changes to update",
+  "data": {
+    "changed": false,
+    "task": {
+      "id": "task_001",
+      "title": "Current title",
+      "description": "Current description",
+      "status": "to_do",
+      "createdByActorId": "john.doe",
+      "createdByActorName": "John Doe",
+      "createdAt": "2026-06-15T02:10:00.000Z",
+      "updatedAt": "2026-06-15T02:10:00.000Z",
+      "deletedAt": null,
+      "deletedByActorId": null,
+      "deletedByActorName": null
+    }
+  }
+}
+```
+
+**Errors**
+
+| Status | Code | When |
+|--------|------|------|
+| `400` | `VALIDATION_ERROR` | Empty / missing `title`, `title` > 255 chars, `description` > 2000 chars, missing or empty `actorId`. |
+| `404` | `ACTOR_NOT_FOUND` | `actorId` is not in the predefined actor list. |
+| `404` | `TASK_NOT_FOUND` | Task ID does not exist, OR the task has been soft-deleted. |
+
+---
+
 ### `PATCH /api/tasks/:taskId/status`
 
 Moves a task to the requested status. Behavior:
@@ -673,9 +778,9 @@ the "View Task" button:
 |------|-------------|---------|
 | `VALIDATION_ERROR` | 400 | Zod validation failed for body / params / query. `error.details` contains the Zod issue list. |
 | `INVALID_STATUS_TRANSITION` | 400 | Status transition is skipped, backward, or attempted from `done`. |
-| `TASK_NOT_FOUND` | 404 | Task ID does not exist. |
+| `TASK_NOT_FOUND` | 404 | Task ID does not exist (active-task endpoint), OR task does not exist / has been soft-deleted (edit endpoint). |
 | `ACTOR_NOT_FOUND` | 404 | `actorId` is not in the predefined actor list. |
-| `TASK_ALREADY_DELETED` | 409 | Task exists but has already been soft-deleted. |
+| `TASK_ALREADY_DELETED` | 409 | Task exists but has already been soft-deleted (returned by `PATCH /:taskId/status` and `DELETE /:taskId/delete`). |
 | `INTERNAL_SERVER_ERROR` | 500 | Unexpected error. Stack trace is suppressed in production. |
 | `DELETED_TASK_NOT_FOUND` | 404 | Task does not exist, or exists but has not been soft-deleted (accessed via the deleted-task endpoint). |
 
