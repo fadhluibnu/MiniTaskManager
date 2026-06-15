@@ -1,14 +1,27 @@
 import cuid from 'cuid'
 import type { AuditLog } from '../../shared/types/audit-log.type'
+import { taskRepository } from '../tasks/repository'
 import { auditLogRepository } from './repository'
-import type { CreateAuditLogInput } from './type'
+import type { AuditLogWithState, CreateAuditLogInput, TaskState } from './type'
 
-function sortByCreatedAtDesc(logs: AuditLog[]): AuditLog[] {
+function sortByCreatedAtDesc<T extends { createdAt: string }>(logs: T[]): T[] {
   return [...logs].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
-function getAuditLogs(): AuditLog[] {
-  return sortByCreatedAtDesc(auditLogRepository.findAll())
+function buildTaskStateMap(): Map<string, Exclude<TaskState, 'unknown'>> {
+  const map = new Map<string, Exclude<TaskState, 'unknown'>>()
+  for (const task of taskRepository.findAll()) {
+    map.set(task.id, task.deletedAt === null ? 'active' : 'deleted')
+  }
+  return map
+}
+
+function getAuditLogs(): AuditLogWithState[] {
+  const stateMap = buildTaskStateMap()
+  return sortByCreatedAtDesc(auditLogRepository.findAll()).map((log) => ({
+    ...log,
+    taskState: stateMap.get(log.taskId) ?? 'unknown'
+  }))
 }
 
 function getAuditLogsByTaskId(taskId: string): AuditLog[] {
