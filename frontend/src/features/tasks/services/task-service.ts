@@ -49,6 +49,18 @@ async function getActiveTaskById(taskId: string): Promise<Task> {
   return extractApiData<Task>(response)
 }
 
+/**
+ * Returns audit logs scoped to a single task, newest first.
+ *
+ * The backend endpoint returns logs for any task ID (active or deleted),
+ * so this is reused by both the active and deleted task detail pages.
+ * It never returns 404 — a missing task simply yields an empty array.
+ */
+async function getTaskAuditLogs(taskId: string): Promise<AuditLog[]> {
+  const response = await httpClient.get(`/tasks/${taskId}/audit-logs`)
+  return extractApiData<AuditLog[]>(response)
+}
+
 async function createTask(payload: CreateTaskPayload): Promise<Task> {
   const response = await httpClient.post('/tasks', payload)
   return extractApiData<Task>(response)
@@ -72,6 +84,7 @@ async function deleteTask(vars: DeleteTaskVars): Promise<DeleteTaskResult> {
 export const taskService = {
   getActiveTasks,
   getActiveTaskById,
+  getTaskAuditLogs,
   createTask,
   updateTaskStatus,
   deleteTask,

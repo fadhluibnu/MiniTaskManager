@@ -1,49 +1,44 @@
 import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/shared/constants/query-keys'
-import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
-import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
-import { FALLBACK_TASKS } from '../../constants/fallback-tasks'
+import { ApiError, extractApiError } from '@/shared/lib/api-helpers'
+import { taskService } from '../../services/task-service'
 import type { Task } from '../../types/task'
 
 interface UseTaskResult {
   task: Task | null
   isLoading: boolean
-  isUsingFallback: boolean
+  isError: boolean
+  error: ApiError | null
   refetch: () => void
 }
 
-const SIMULATED_DELAY_MS = 300
-
-function readLocalTasks(): Task[] {
-  const stored = getJSON<Task[]>(STORAGE_KEYS.previewTasks)
-  if (stored && Array.isArray(stored) && stored.length > 0) {
-    return stored
-  }
-  setJSON(STORAGE_KEYS.previewTasks, FALLBACK_TASKS)
-  return FALLBACK_TASKS
-}
-
 /**
- * Fetches a single active task by id. Returns `null` if the task does
- * not exist or has been soft-deleted — callers can use that to render
- * a "not found" state. Reads from the same `previewTasks` store as
- * `useTasks`; the two queries stay in sync via shared cache
- * invalidation on mutations.
+ * Fetches a single active task by id from the backend.
+ *
+ * `TASK_NOT_FOUND` (404) is mapped to `task: null` so callers can
+ * render the dedicated "not found" state without having to branch on
+ * the error code. Other errors (500, network) bubble up to React
+ * Query so `isError` and `error` expose the underlying `ApiError`.
  */
 export function useTask(taskId: string): UseTaskResult {
   const query = useQuery<Task | null>({
     queryKey: QUERY_KEYS.tasks.detail(taskId),
+    enabled: Boolean(taskId),
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
-      const all = readLocalTasks()
-      return all.find((task) => task.id === taskId && !task.deletedAt) ?? null
+      try {
+        return await taskService.getActiveTaskById(taskId)
+      } catch (err) {
+        if (extractApiError(err).code === 'TASK_NOT_FOUND') return null
+        throw err
+      }
     },
   })
 
   return {
     task: query.data ?? null,
     isLoading: query.isLoading,
-    isUsingFallback: false,
+    isError: query.isError,
+    error: query.error ? extractApiError(query.error) : null,
     refetch: () => {
       void query.refetch()
     },

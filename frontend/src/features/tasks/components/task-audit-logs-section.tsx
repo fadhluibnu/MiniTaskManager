@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button'
+import { ApiError } from '@/shared/lib/api-helpers'
 import type { AuditLog } from '@/features/audit-logs/types/audit-log'
 import AuditLogItem from './audit-log-item'
 
 interface TaskAuditLogsSectionProps {
   logs: AuditLog[]
   isLoading: boolean
+  error?: ApiError | null
   onRefresh: () => void
   emptyTitle?: string
   emptyDescription?: string
@@ -32,16 +34,38 @@ function AuditLogsSkeleton() {
   )
 }
 
+function AuditLogsError({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-red-200 bg-red-50/40 p-6 text-center">
+      <h3 className="text-sm font-semibold text-slate-950">Failed to load audit logs</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {error.message || 'Something went wrong while loading audit logs.'}
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onRetry}
+        className="mt-3 h-8 rounded-lg border-slate-200 bg-white px-3 text-xs font-medium text-slate-950 hover:bg-slate-50"
+      >
+        Retry
+      </Button>
+    </div>
+  )
+}
+
 export default function TaskAuditLogsSection({
   logs,
   isLoading,
+  error,
   onRefresh,
   emptyTitle = 'No audit logs yet',
   emptyDescription = 'Status changes and task deletion will be recorded here.',
 }: TaskAuditLogsSectionProps) {
   const countText = isLoading
     ? 'Loading logs...'
-    : `${logs.length} log${logs.length === 1 ? '' : 's'}`
+    : error
+      ? 'Audit logs unavailable'
+      : `${logs.length} log${logs.length === 1 ? '' : 's'}`
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -63,6 +87,8 @@ export default function TaskAuditLogsSection({
 
       {isLoading ? (
         <AuditLogsSkeleton />
+      ) : error ? (
+        <AuditLogsError error={error} onRetry={onRefresh} />
       ) : logs.length === 0 ? (
         <AuditLogsEmpty title={emptyTitle} description={emptyDescription} />
       ) : (

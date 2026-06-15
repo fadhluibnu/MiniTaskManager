@@ -5,6 +5,7 @@ import { useStoredActor } from '@/features/actors/hooks/use-stored-actor'
 import { MESSAGES } from '@/shared/constants/messages'
 import DeleteTaskDialog from '@/features/tasks/components/delete-task-dialog'
 import TaskAuditLogsSection from '@/features/tasks/components/task-audit-logs-section'
+import TaskDetailError from '@/features/tasks/detail/components/task-detail-error'
 import StatusFlowDetail from '@/features/tasks/detail/components/status-flow-detail'
 import TaskDetailHeader from '@/features/tasks/detail/components/task-detail-header'
 import TaskDetailLoading from '@/features/tasks/detail/components/task-detail-loading'
@@ -26,8 +27,13 @@ export default function TaskDetailPage() {
   const actor = useStoredActor()
   const hasActor = actor !== null
 
-  const { task, isLoading } = useTask(taskId ?? '')
-  const { logs, isLoading: isAuditLoading, refetch: refetchLogs } = useTaskAuditLogs(taskId ?? '')
+  const { task, isLoading, isError, error, refetch } = useTask(taskId ?? '')
+  const {
+    logs,
+    isLoading: isAuditLoading,
+    error: auditError,
+    refetch: refetchLogs,
+  } = useTaskAuditLogs(taskId ?? '')
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateTaskStatus()
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
 
@@ -68,6 +74,8 @@ export default function TaskDetailPage() {
 
         {isLoading ? (
           <TaskDetailLoading />
+        ) : isError ? (
+          <TaskDetailError error={error!} onRetry={refetch} />
         ) : !task ? (
           <TaskNotFound />
         ) : (
@@ -85,9 +93,8 @@ export default function TaskDetailPage() {
             <TaskAuditLogsSection
               logs={logs}
               isLoading={isAuditLoading}
-              onRefresh={() => {
-                void refetchLogs()
-              }}
+              error={auditError}
+              onRefresh={refetchLogs}
             />
           </div>
         )}
