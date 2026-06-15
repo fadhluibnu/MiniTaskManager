@@ -15,6 +15,9 @@ export const taskRepository = {
   findActive(): Task[] {
     return taskRepository.findAll().filter((task) => task.deletedAt === null)
   },
+  findDeleted(): Task[] {
+    return taskRepository.findAll().filter((task) => task.deletedAt !== null)
+  },
   insert(task: Task): Task {
     return jsonStorage.insert<Task>(TASKS_FILE, task)
   },

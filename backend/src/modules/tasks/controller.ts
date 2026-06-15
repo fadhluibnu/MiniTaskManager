@@ -12,11 +12,28 @@ export const taskController = {
     })
   }),
 
+  getDeletedTasks: asyncHandler(async (_req, res) => {
+    const tasks = await taskService.getDeletedTasks()
+    return sendSuccess(res, {
+      message: 'Deleted tasks retrieved successfully',
+      data: tasks
+    })
+  }),
+
   getTaskById: asyncHandler(async (req, res) => {
     const taskId = req.params.taskId as string
     const task = await taskService.getActiveTaskById(taskId)
     return sendSuccess(res, {
       message: 'Task retrieved successfully',
+      data: task
+    })
+  }),
+
+  getDeletedTaskById: asyncHandler(async (req, res) => {
+    const taskId = req.params.taskId as string
+    const task = await taskService.getDeletedTaskById(taskId)
+    return sendSuccess(res, {
+      message: 'Deleted task retrieved successfully',
       data: task
     })
   }),

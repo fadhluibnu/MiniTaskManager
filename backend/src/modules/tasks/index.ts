@@ -21,6 +21,12 @@ router.post(
   validateRequest({ body: createTaskSchema }),
   taskController.createTask
 )
+router.get('/deleted', taskController.getDeletedTasks)
+router.get(
+  '/deleted/:taskId/detail',
+  validateRequest({ params: taskParamsSchema }),
+  taskController.getDeletedTaskById
+)
 router.get(
   '/:taskId/detail',
   validateRequest({ params: taskParamsSchema }),

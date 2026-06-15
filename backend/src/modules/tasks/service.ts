@@ -35,6 +35,14 @@ function replaceTask(tasks: Task[], updated: Task): Task[] {
   return tasks.map((task) => (task.id === updated.id ? updated : task))
 }
 
+function sortByDeletedAtDesc(tasks: Task[]): Task[] {
+  return [...tasks].sort((a, b) => {
+    const aTime = a.deletedAt ?? ''
+    const bTime = b.deletedAt ?? ''
+    return bTime.localeCompare(aTime)
+  })
+}
+
 function getActiveTasks(query: GetTasksQuery): Task[] {
   const tasks = taskRepository.findActive()
   const search = query.search?.trim()
@@ -43,6 +51,18 @@ function getActiveTasks(query: GetTasksQuery): Task[] {
   }
   const needle = search.toLowerCase()
   return tasks.filter((task) => task.title.toLowerCase().includes(needle))
+}
+
+function getDeletedTasks(): Task[] {
+  return sortByDeletedAtDesc(taskRepository.findDeleted())
+}
+
+function getDeletedTaskById(taskId: string): Task {
+  const task = taskRepository.findById(taskId)
+  if (!task || task.deletedAt === null) {
+    throw new AppError('Deleted task not found', 404, 'DELETED_TASK_NOT_FOUND')
+  }
+  return task
 }
 
 function createTask(input: CreateTaskInput): Task {
@@ -141,6 +161,8 @@ function deleteTask(taskId: string, input: DeleteTaskInput): DeleteTaskResult {
 export const taskService = {
   getActiveTasks,
   getActiveTaskById: findActiveTaskOrThrow,
+  getDeletedTasks,
+  getDeletedTaskById,
   createTask,
   updateTaskStatus,
   deleteTask

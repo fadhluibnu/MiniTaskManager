@@ -191,6 +191,115 @@ GET /api/tasks/task_001/detail
 
 ---
 
+### `GET /api/tasks/deleted`
+
+Returns all **soft-deleted** tasks, sorted by `deletedAt` **newest first**.
+A task is considered deleted when its `deletedAt` field is non-null.
+
+The list endpoint is read-only; deleted tasks cannot be modified or
+restored through this endpoint.
+
+Search is intentionally **client-side** per project spec — no
+`?search=` query is supported by this endpoint. Filter the response on
+the frontend if needed.
+
+**Request**
+
+```
+GET /api/tasks/deleted
+```
+
+No request body, URL params, or query string.
+
+**Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Deleted tasks retrieved successfully",
+  "data": [
+    {
+      "id": "task_001",
+      "title": "halo",
+      "description": "hai",
+      "status": "to_do",
+      "createdByActorId": "john.doe",
+      "createdByActorName": "John Doe",
+      "createdAt": "2026-06-15T03:58:00.000Z",
+      "updatedAt": "2026-06-15T03:58:00.000Z",
+      "deletedAt": "2026-06-15T03:58:00.000Z",
+      "deletedByActorId": "john.doe",
+      "deletedByActorName": "John Doe"
+    }
+  ]
+}
+```
+
+If no tasks have been deleted:
+
+```json
+{
+  "success": true,
+  "message": "Deleted tasks retrieved successfully",
+  "data": []
+}
+```
+
+**Errors**
+
+This endpoint does not return user errors under normal use.
+
+---
+
+### `GET /api/tasks/deleted/:taskId/detail`
+
+Returns the detail of a single **soft-deleted** task (i.e. a task with
+`deletedAt !== null`). Active tasks are NOT returned by this endpoint
+and yield a 404 from the deleted-task perspective.
+
+**Request**
+
+```
+GET /api/tasks/deleted/task_001/detail
+```
+
+**URL parameters**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `taskId` | string | yes | Task ID. |
+
+**Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Deleted task retrieved successfully",
+  "data": {
+    "id": "task_001",
+    "title": "halo",
+    "description": "hai",
+    "status": "to_do",
+    "createdByActorId": "john.doe",
+    "createdByActorName": "John Doe",
+    "createdAt": "2026-06-15T03:58:00.000Z",
+    "updatedAt": "2026-06-15T03:58:00.000Z",
+    "deletedAt": "2026-06-15T03:58:00.000Z",
+    "deletedByActorId": "john.doe",
+    "deletedByActorName": "John Doe"
+  }
+}
+```
+
+**Errors**
+
+| Status | Code | When |
+|--------|------|------|
+| `400` | `VALIDATION_ERROR` | Empty or missing `taskId` in URL params. |
+| `404` | `DELETED_TASK_NOT_FOUND` | Task ID does not exist, OR the task exists but is not soft-deleted (active-task endpoint returns 404 from the deleted perspective). |
+
+---
+
 ### `POST /api/tasks`
 
 Creates a new task. The new task always starts with status `to_do`.
@@ -545,6 +654,7 @@ GET /api/audit-logs
 | `ACTOR_NOT_FOUND` | 404 | `actorId` is not in the predefined actor list. |
 | `TASK_ALREADY_DELETED` | 409 | Task exists but has already been soft-deleted. |
 | `INTERNAL_SERVER_ERROR` | 500 | Unexpected error. Stack trace is suppressed in production. |
+| `DELETED_TASK_NOT_FOUND` | 404 | Task does not exist, or exists but has not been soft-deleted (accessed via the deleted-task endpoint). |
 
 ### Example error response
 

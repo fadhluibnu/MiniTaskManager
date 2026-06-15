@@ -413,7 +413,7 @@ Route declaration note:
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/tasks/deleted` | Get deleted tasks |
-| GET | `/api/tasks/deleted/:taskId` | Get deleted task detail |
+| GET | `/api/tasks/deleted/:taskId/detail` | Get deleted task detail |
 
 Deleted tasks are considered inactive and must not be returned from `GET /api/tasks` or `GET /api/tasks/:taskId/detail`.
 
