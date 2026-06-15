@@ -61,6 +61,11 @@ async function getTaskAuditLogs(taskId: string): Promise<AuditLog[]> {
   return extractApiData<AuditLog[]>(response)
 }
 
+async function getDeletedTasks(): Promise<Task[]> {
+  const response = await httpClient.get('/tasks/deleted')
+  return extractApiData<Task[]>(response)
+}
+
 async function createTask(payload: CreateTaskPayload): Promise<Task> {
   const response = await httpClient.post('/tasks', payload)
   return extractApiData<Task>(response)
@@ -85,6 +90,7 @@ export const taskService = {
   getActiveTasks,
   getActiveTaskById,
   getTaskAuditLogs,
+  getDeletedTasks,
   createTask,
   updateTaskStatus,
   deleteTask,

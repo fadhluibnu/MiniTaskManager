@@ -732,6 +732,29 @@ returns logs for any task ID (active or deleted), the
 `useTaskAuditLogs` hook is shared between `TaskDetailPage` and
 `DeletedTaskDetailPage` — integrating it once benefits both pages.
 
+#### Deleted-list search behavior
+
+`DeletedTasksPage` (`/deleted-tasks`) is integrated with the
+backend via `GET /api/tasks/deleted`, which returns the list sorted
+newest-deleted first. **Search is intentionally client-side** for
+this endpoint — the backend does not support `?search=` (see
+`docs/API_DOCUMENTATION.md` §"Deleted Tasks" note 1), so the page
+filters the response via `filterDeletedTasks`. This is the
+deliberate opposite of the active task list, where search is
+server-side.
+
+Cache sync between `/tasks` and `/deleted-tasks` is automatic: when
+`useDeleteTask` invalidates `QUERY_KEYS.tasks.all` (`['tasks']`),
+TanStack Query prefix-matches the deleted list key
+`['tasks', 'deleted']` and re-fetches on the next mount or
+explicit refetch.
+
+> `DeletedTaskDetailPage` (`/deleted-tasks/:taskId`) is **not yet**
+> integrated. It still reads from `localStorage` via
+> `useDeletedTask` and will be migrated in a follow-up using the
+> `GET /api/tasks/deleted/:taskId/detail` endpoint (which returns
+> `DELETED_TASK_NOT_FOUND` for non-deleted / missing tasks).
+
 ---
 
 ## 20. Security Considerations
