@@ -1,44 +1,31 @@
 import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/shared/constants/query-keys'
-import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
-import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
-import { FALLBACK_TASKS } from '../../constants/fallback-tasks'
+import { taskService, type GetTasksParams } from '../../services/task-service'
 import type { Task } from '../../types/task'
 
 interface UseTasksResult {
   tasks: Task[]
   isLoading: boolean
-  isUsingFallback: boolean
   refetch: () => void
 }
 
-const SIMULATED_DELAY_MS = 300
-
-function readLocalTasks(): Task[] {
-  const stored = getJSON<Task[]>(STORAGE_KEYS.previewTasks)
-  if (stored && Array.isArray(stored) && stored.length > 0) {
-    return stored
-  }
-  setJSON(STORAGE_KEYS.previewTasks, FALLBACK_TASKS)
-  return FALLBACK_TASKS
-}
-
-export function useTasks(): UseTasksResult {
+/**
+ * Fetches the list of active (non-deleted) tasks from the backend.
+ *
+ * Search is performed server-side via `?search=` so the result is
+ * always consistent with the backend source of truth. The query key
+ * includes the search term so each unique search gets its own cache
+ * entry.
+ */
+export function useTasks(params?: GetTasksParams): UseTasksResult {
   const query = useQuery<Task[]>({
-    queryKey: QUERY_KEYS.tasks.all,
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
-      return readLocalTasks().filter((task) => !task.deletedAt)
-    },
+    queryKey: QUERY_KEYS.tasks.list(params),
+    queryFn: () => taskService.getActiveTasks(params),
   })
 
   return {
     tasks: query.data ?? [],
     isLoading: query.isLoading,
-    // We always read from local storage in preview mode, so we never
-    // surface the "backend unavailable" notice. Flip to `true` here
-    // when the queryFn catches a real network failure.
-    isUsingFallback: false,
     refetch: () => {
       void query.refetch()
     },

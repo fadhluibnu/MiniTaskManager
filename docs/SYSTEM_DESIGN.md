@@ -674,6 +674,31 @@ Frontend state strategy:
 4. Axios handles HTTP requests through a shared HTTP client.
 5. Zod and React Hook Form handle form validation.
 
+### Frontend API integration
+
+The `TaskManagerPage` (`/` and `/tasks`) is the first feature fully
+integrated with the backend. The pattern below is the reference for
+any future integration:
+
+1. **`features/<feature>/services/<feature>-service.ts`** — owns the
+   raw HTTP calls via the shared axios `httpClient`. Each function
+   unwraps the backend envelope `{ success, message, data, error }`
+   using `extractApiData<T>(response)` from
+   `src/shared/lib/api-helpers.ts` and returns the inner `data`
+   payload. Services never return the envelope itself.
+2. **`features/<feature>/hooks/use-<action>.ts`** — wraps the service
+   in `useQuery` (with query key from `shared/constants/query-keys.ts`)
+   or `useMutation` (with cache invalidation on success and
+   `extractApiError` for toast messaging on failure).
+3. **Page** — only knows about the hook; never imports the service
+   directly. The page is responsible for actor guards and passing
+   user input into mutations.
+
+Errors thrown by services are normalized to `ApiError` (see
+`FRONTEND_RULES.md §8`) so `onError` handlers can rely on
+`error.code`, `error.status`, and `error.message` regardless of
+whether the failure came from the backend envelope or axios itself.
+
 ---
 
 ## 20. Security Considerations

@@ -193,16 +193,66 @@ export const QUERY_KEYS = {
 - Place API call functions in `features/[feature]/services/`.
 - Always type the response using TypeScript generics.
 
-**Example:**
+### 8.1 Envelope unwrapping
+
+Every backend endpoint returns the standardized envelope
+`{ success, message, data, error? }` (see
+`docs/API_DOCUMENTATION.md` §"Conventions"). Service functions
+**must** unwrap this envelope before returning to hooks — hooks
+should never see the envelope. Use the shared helper:
+
+```ts
+import { extractApiData } from '@/shared/lib/api-helpers'
+
+const response = await httpClient.get('/tasks', { params })
+return extractApiData<Task[]>(response)
+```
+
+### 8.2 Error normalization
+
+Use `extractApiError(error)` inside `onError` handlers to normalize
+anything thrown by a service into an `ApiError` instance. The
+`ApiError` class (in `src/shared/lib/api-helpers.ts`) extends
+`Error` and carries:
+
+| Field      | Source                                                |
+|------------|-------------------------------------------------------|
+| `message`  | `response.data.message` (backend human-readable)      |
+| `code`     | `response.data.error.code` (machine-readable, e.g. `TASK_NOT_FOUND`, `INVALID_STATUS_TRANSITION`) |
+| `status`   | HTTP status from axios (`response.status`)            |
+| `details`  | `response.data.error.details` (Zod issues, etc.)      |
+
+For network errors (no `response`), `code` falls back to
+`'NETWORK_ERROR'` and `status` is `0`.
+
+**Example (mutation):**
+
+```ts
+// features/tasks/hooks/use-create-task.ts
+import { extractApiError } from '@/shared/lib/api-helpers'
+import { MESSAGES } from '@/shared/constants/messages'
+
+onError: (error) => {
+  toast.error(extractApiError(error).message || MESSAGES.generic.somethingWrong)
+}
+```
+
+Use `ApiError.code` to branch on specific backend errors (for
+example, render a "not found" state on `TASK_NOT_FOUND`).
+
+**Example (service):**
 
 ```ts
 // features/tasks/services/taskService.ts
 import httpClient from '@/shared/lib/http-client'
+import { extractApiData } from '@/shared/lib/api-helpers'
 import type { Task } from '../types/task'
 
-export const getTasks = async (): Promise<Task[]> => {
-  const response = await httpClient.get<Task[]>('/tasks')
-  return response.data
+export const taskService = {
+  getActiveTasks: async (): Promise<Task[]> => {
+    const response = await httpClient.get('/tasks')
+    return extractApiData<Task[]>(response)
+  },
 }
 ```
 

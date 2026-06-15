@@ -38,7 +38,7 @@ export default function TaskDetailPage() {
       toast.error(MESSAGES.actor.required)
       return
     }
-    updateStatus({ taskId: task.id, actor })
+    updateStatus({ task, actor })
   }
 
   const handleDeleteRequest = () => {

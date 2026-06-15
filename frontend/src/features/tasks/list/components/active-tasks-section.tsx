@@ -5,20 +5,18 @@ import type { Task } from '../../types/task'
 
 interface ActiveTasksSectionProps {
   tasks: Task[]
-  totalCount: number
   isLoading: boolean
   isActionDisabled: boolean
   searchQuery: string
   onSearchChange: (value: string) => void
   onClearSearch: () => void
   onRefresh: () => void
-  onMove: (taskId: string) => void
+  onMove: (task: Task) => void
   onDelete: (task: Task) => void
 }
 
 export default function ActiveTasksSection({
   tasks,
-  totalCount,
   isLoading,
   isActionDisabled,
   searchQuery,
@@ -32,8 +30,8 @@ export default function ActiveTasksSection({
   const countText = isLoading
     ? 'Loading tasks...'
     : isSearching
-      ? `Showing ${tasks.length} of ${totalCount} active tasks`
-      : `${totalCount} active task${totalCount === 1 ? '' : 's'}`
+      ? `${tasks.length} matching task${tasks.length === 1 ? '' : 's'}`
+      : `${tasks.length} active task${tasks.length === 1 ? '' : 's'}`
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -57,7 +55,6 @@ export default function ActiveTasksSection({
 
       <TaskList
         tasks={tasks}
-        totalCount={totalCount}
         isLoading={isLoading}
         isActionDisabled={isActionDisabled}
         searchQuery={searchQuery}

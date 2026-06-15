@@ -1,0 +1,78 @@
+import { extractApiData } from '@/shared/lib/api-helpers'
+import httpClient from '@/shared/lib/http-client'
+import type { AuditLog } from '@/features/audit-logs/types/audit-log'
+import type { CreateTaskInput } from '../schemas/create-task-schema'
+import type { Task } from '../types/task'
+import type { TaskStatus } from '../types/task-status'
+
+export interface GetTasksParams {
+  search?: string
+}
+
+export interface CreateTaskPayload extends CreateTaskInput {
+  actorId: string
+}
+
+/**
+ * Mirrors the backend `UpdateTaskStatusResult` union.
+ *
+ * - `changed: true`  → status moved one step forward, a `STATUS_CHANGED` audit log was created.
+ * - `changed: false` → no-op (current status already matches), no audit log created.
+ */
+export type UpdateTaskStatusResult =
+  | { changed: true; task: Task; auditLog: AuditLog }
+  | { changed: false; task: Task; auditLog: null }
+
+export interface UpdateTaskStatusVars {
+  taskId: string
+  actorId: string
+  toStatus: TaskStatus
+}
+
+export interface DeleteTaskVars {
+  taskId: string
+  actorId: string
+}
+
+export interface DeleteTaskResult {
+  task: Task
+  auditLog: AuditLog
+}
+
+async function getActiveTasks(params?: GetTasksParams): Promise<Task[]> {
+  const response = await httpClient.get('/tasks', { params })
+  return extractApiData<Task[]>(response)
+}
+
+async function getActiveTaskById(taskId: string): Promise<Task> {
+  const response = await httpClient.get(`/tasks/${taskId}/detail`)
+  return extractApiData<Task>(response)
+}
+
+async function createTask(payload: CreateTaskPayload): Promise<Task> {
+  const response = await httpClient.post('/tasks', payload)
+  return extractApiData<Task>(response)
+}
+
+async function updateTaskStatus(vars: UpdateTaskStatusVars): Promise<UpdateTaskStatusResult> {
+  const response = await httpClient.patch(`/tasks/${vars.taskId}/status`, {
+    actorId: vars.actorId,
+    toStatus: vars.toStatus,
+  })
+  return extractApiData<UpdateTaskStatusResult>(response)
+}
+
+async function deleteTask(vars: DeleteTaskVars): Promise<DeleteTaskResult> {
+  const response = await httpClient.delete(`/tasks/${vars.taskId}/delete`, {
+    data: { actorId: vars.actorId },
+  })
+  return extractApiData<DeleteTaskResult>(response)
+}
+
+export const taskService = {
+  getActiveTasks,
+  getActiveTaskById,
+  createTask,
+  updateTaskStatus,
+  deleteTask,
+}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useStoredActor } from '@/features/actors/hooks/use-stored-actor'
 import { MESSAGES } from '@/shared/constants/messages'
@@ -12,7 +12,6 @@ import { useTasks } from '@/features/tasks/list/hooks/use-tasks'
 import { useUpdateTaskStatus } from '@/features/tasks/hooks/use-update-task-status'
 import type { CreateTaskInput } from '@/features/tasks/schemas/create-task-schema'
 import type { Task } from '@/features/tasks/types/task'
-import { filterTasks } from '@/features/tasks/utils/filter-tasks'
 
 export default function TaskManagerPage() {
   useEffect(() => {
@@ -21,15 +20,16 @@ export default function TaskManagerPage() {
 
   const actor = useStoredActor()
   const hasActor = actor !== null
-  const { tasks, isLoading, refetch } = useTasks()
+  const [searchQuery, setSearchQuery] = useState('')
+  // Search runs server-side via `?search=`. The hook's query key
+  // includes the search term, so each unique search gets its own
+  // cache entry and clearing the search triggers a fresh `GET /tasks`.
+  const { tasks, isLoading, refetch } = useTasks({ search: searchQuery })
   const { mutate: createTask, isPending: isCreating } = useCreateTask()
   const { mutate: updateStatus } = useUpdateTaskStatus()
   const { mutate: deleteTask } = useDeleteTask()
 
-  const [searchQuery, setSearchQuery] = useState('')
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null)
-
-  const filteredTasks = useMemo(() => filterTasks(tasks, searchQuery), [tasks, searchQuery])
 
   const handleCreate = useCallback(
     (input: CreateTaskInput) => {
@@ -43,12 +43,12 @@ export default function TaskManagerPage() {
   )
 
   const handleMove = useCallback(
-    (taskId: string) => {
+    (task: Task) => {
       if (!actor) {
         toast.error(MESSAGES.actor.required)
         return
       }
-      updateStatus({ taskId, actor })
+      updateStatus({ task, actor })
     },
     [actor, updateStatus]
   )
@@ -93,8 +93,7 @@ export default function TaskManagerPage() {
           />
 
           <ActiveTasksSection
-            tasks={filteredTasks}
-            totalCount={tasks.length}
+            tasks={tasks}
             isLoading={isLoading}
             isActionDisabled={!hasActor}
             searchQuery={searchQuery}

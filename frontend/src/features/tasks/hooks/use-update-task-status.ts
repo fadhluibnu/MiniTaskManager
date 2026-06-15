@@ -2,76 +2,53 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { QUERY_KEYS } from '@/shared/constants/query-keys'
 import { MESSAGES } from '@/shared/constants/messages'
-import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
-import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
+import { extractApiError } from '@/shared/lib/api-helpers'
 import type { ActorCardData } from '@/features/actors/types/actor'
-import type { AuditLog } from '@/features/audit-logs/types/audit-log'
-import { FALLBACK_AUDIT_LOGS } from '@/features/audit-logs/constants/fallback-audit-logs'
+import { taskService, type UpdateTaskStatusResult } from '../services/task-service'
 import type { Task } from '../types/task'
 import { formatStatus } from '../utils/format-status'
 import { getNextStatus } from '../utils/get-next-status'
 
 interface UpdateStatusVars {
-  taskId: string
+  task: Task
   actor: ActorCardData
 }
 
-const SIMULATED_DELAY_MS = 200
-
-function readLocalAuditLogs(): AuditLog[] {
-  const stored = getJSON<AuditLog[]>(STORAGE_KEYS.previewAuditLogs)
-  if (stored && Array.isArray(stored)) return stored
-  setJSON(STORAGE_KEYS.previewAuditLogs, FALLBACK_AUDIT_LOGS)
-  return FALLBACK_AUDIT_LOGS
-}
-
+/**
+ * Moves a task one step forward in the status flow.
+ *
+ * The next status is derived client-side from the current status via
+ * `getNextStatus` and sent to the backend's `PATCH /tasks/:id/status`
+ * endpoint. The backend is the source of truth for valid transitions
+ * and returns the actual updated task (or a `changed: false`
+ * no-op result if the current status already matches `toStatus`).
+ */
 export function useUpdateTaskStatus() {
   const queryClient = useQueryClient()
 
-  return useMutation<Task, Error, UpdateStatusVars>({
-    mutationFn: async ({ taskId, actor }) => {
-      await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
-
-      const currentTasks = getJSON<Task[]>(STORAGE_KEYS.previewTasks) ?? []
-      const task = currentTasks.find((t) => t.id === taskId)
-      if (!task) throw new Error('Task not found')
-
+  return useMutation<UpdateTaskStatusResult, Error, UpdateStatusVars>({
+    mutationFn: async ({ task, actor }) => {
       const nextStatus = getNextStatus(task.status)
-      if (!nextStatus) throw new Error('Task is already at the final status')
-
-      const previousStatus = task.status
-      const now = new Date().toISOString()
-      const updated: Task = {
-        ...task,
-        status: nextStatus,
-        updatedAt: now,
+      if (!nextStatus) {
+        throw new Error('Task is already at the final status')
       }
-
-      setJSON(
-        STORAGE_KEYS.previewTasks,
-        currentTasks.map((t) => (t.id === taskId ? updated : t))
-      )
-
-      const newLog: AuditLog = {
-        id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        taskId,
-        taskTitle: task.title,
+      return taskService.updateTaskStatus({
+        taskId: task.id,
         actorId: actor.id,
-        actorName: actor.name,
-        eventType: 'STATUS_CHANGED',
-        fromStatus: previousStatus,
         toStatus: nextStatus,
-        createdAt: now,
-      }
-      const currentLogs = readLocalAuditLogs()
-      setJSON(STORAGE_KEYS.previewAuditLogs, [newLog, ...currentLogs])
-
-      return updated
+      })
     },
-    onSuccess: (updated) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tasks.all })
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auditLogs.all })
-      toast.success(MESSAGES.task.statusUpdated(formatStatus(updated.status)))
+    onSuccess: (result) => {
+      // No-op (same-status) responses don't change anything, so skip
+      // the cache invalidation to avoid a needless refetch.
+      if (result.changed) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tasks.all })
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auditLogs.all })
+      }
+      toast.success(MESSAGES.task.statusUpdated(formatStatus(result.task.status)))
+    },
+    onError: (error) => {
+      toast.error(extractApiError(error).message || MESSAGES.generic.somethingWrong)
     },
   })
 }

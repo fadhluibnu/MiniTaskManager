@@ -4,6 +4,10 @@ export const QUERY_KEYS = {
   },
   tasks: {
     all: ['tasks'] as const,
+    list: (params?: { search?: string }) =>
+      params?.search
+        ? (['tasks', 'list', { search: params.search }] as const)
+        : (['tasks', 'list'] as const),
     detail: (taskId: string) => ['tasks', taskId] as const,
     deleted: ['tasks', 'deleted'] as const,
     deletedDetail: (taskId: string) => ['tasks', 'deleted', taskId] as const,

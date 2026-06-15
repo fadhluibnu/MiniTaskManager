@@ -9,7 +9,7 @@ import StatusBadge from '../../components/status-badge'
 interface TaskCardProps {
   task: Task
   isActionDisabled: boolean
-  onMove: (taskId: string) => void
+  onMove: (task: Task) => void
   onDelete: (task: Task) => void
 }
 
@@ -55,7 +55,7 @@ export default function TaskCard({ task, isActionDisabled, onMove, onDelete }: T
           <Button
             type="button"
             disabled={isActionDisabled || !nextStatus}
-            onClick={() => onMove(task.id)}
+            onClick={() => onMove(task)}
             className="h-9 rounded-lg bg-slate-950 px-3 text-xs font-medium text-white hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50"
           >
             {moveLabel}
