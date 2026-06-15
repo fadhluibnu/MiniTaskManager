@@ -13,7 +13,6 @@ interface SendSuccessOptions<T> {
   statusCode?: number
 }
 
-
 function sendSuccess<T>(
   res: Response,
   options: SendSuccessOptions<T>
@@ -26,14 +25,12 @@ function sendSuccess<T>(
   return res.status(options.statusCode ?? 200).json(body)
 }
 
-
 interface SendErrorOptions {
   message: string
   statusCode?: number
   code?: string
   details?: unknown
 }
-
 
 function sendError(res: Response, options: SendErrorOptions): Response {
   const body: ApiResponse<null> = {

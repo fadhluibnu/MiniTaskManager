@@ -22,6 +22,11 @@ router.post(
   taskController.createTask
 )
 router.get(
+  '/:taskId/detail',
+  validateRequest({ params: taskParamsSchema }),
+  taskController.getTaskById
+)
+router.get(
   '/:taskId/audit-logs',
   validateRequest({ params: taskParamsSchema }),
   taskController.getTaskAuditLogs

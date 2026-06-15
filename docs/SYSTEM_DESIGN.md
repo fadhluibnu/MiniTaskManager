@@ -395,7 +395,7 @@ Examples:
 |---|---|---|
 | GET | `/api/tasks` | Get active tasks |
 | POST | `/api/tasks` | Create a new task |
-| GET | `/api/tasks/:taskId` | Get active task detail |
+| GET | `/api/tasks/:taskId/detail` | Get active task detail |
 | PATCH | `/api/tasks/:taskId/status` | Update task status |
 | DELETE | `/api/tasks/:taskId/delete` | Soft delete task |
 | GET | `/api/tasks/:taskId/audit-logs` | Get task audit logs |
@@ -415,7 +415,7 @@ Route declaration note:
 | GET | `/api/tasks/deleted` | Get deleted tasks |
 | GET | `/api/tasks/deleted/:taskId` | Get deleted task detail |
 
-Deleted tasks are considered inactive and must not be returned from `GET /api/tasks` or `GET /api/tasks/:taskId`.
+Deleted tasks are considered inactive and must not be returned from `GET /api/tasks` or `GET /api/tasks/:taskId/detail`.
 
 ---
 

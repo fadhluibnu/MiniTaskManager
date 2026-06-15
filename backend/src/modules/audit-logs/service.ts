@@ -3,7 +3,6 @@ import type { AuditLog } from '../../shared/types/audit-log.type'
 import { auditLogRepository } from './repository'
 import type { CreateAuditLogInput } from './type'
 
-
 function sortByCreatedAtDesc(logs: AuditLog[]): AuditLog[] {
   return [...logs].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }

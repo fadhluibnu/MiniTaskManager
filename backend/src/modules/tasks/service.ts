@@ -21,19 +21,11 @@ function findActiveTaskOrThrow(taskId: string): Task {
     throw new AppError('Task not found', 404, 'TASK_NOT_FOUND')
   }
   if (task.deletedAt !== null) {
-    throw new AppError('Task has been deleted', 409, 'TASK_ALREADY_DELETED')
+    throw new AppError('Task not found', 404, 'TASK_NOT_FOUND')
   }
   return task
 }
 
-/**
- * Transaction-like commit: persist task array FIRST, then append audit log.
- *
- * Rationale: if the audit log write fails after the task write, the data
- * is recoverable (re-derive the audit log from the current task state).
- * The reverse order would leave a misleading phantom audit entry with
- * no matching task state change.
- */
 function commitTaskAndAuditLog(tasks: Task[], auditLog: AuditLog): void {
   taskRepository.saveAll(tasks)
   auditLogRepository.insert(auditLog)
@@ -42,8 +34,6 @@ function commitTaskAndAuditLog(tasks: Task[], auditLog: AuditLog): void {
 function replaceTask(tasks: Task[], updated: Task): Task[] {
   return tasks.map((task) => (task.id === updated.id ? updated : task))
 }
-
-/* ──── Public service methods ──── */
 
 function getActiveTasks(query: GetTasksQuery): Task[] {
   const tasks = taskRepository.findActive()
@@ -71,7 +61,6 @@ function createTask(input: CreateTaskInput): Task {
     deletedByActorId: null,
     deletedByActorName: null
   }
-  // No audit log for task creation (PRD §12.1 rule 11).
   return taskRepository.insert(newTask)
 }
 
@@ -82,12 +71,10 @@ function updateTaskStatus(
   const actor = actorService.ensureActorExists(input.actorId)
   const task = findActiveTaskOrThrow(taskId)
 
-  // 1. Idempotent check first: same status is a no-op (PRD §12.2 rule 6).
   if (task.status === input.toStatus) {
     return { changed: false, task, auditLog: null }
   }
 
-  // 2. Status flow validation: only one step forward allowed.
   const nextStatus = STATUS_FLOW[task.status]
   if (nextStatus === null || nextStatus !== input.toStatus) {
     throw new AppError(
@@ -97,7 +84,6 @@ function updateTaskStatus(
     )
   }
 
-  // 3. Prepare updated task and audit log.
   const now = new Date().toISOString()
   const updatedTask: Task = {
     ...task,
@@ -116,7 +102,6 @@ function updateTaskStatus(
     createdAt: now
   }
 
-  // 4. Persist both in a single conceptual flow.
   const tasks = replaceTask(taskRepository.findAll(), updatedTask)
   commitTaskAndAuditLog(tasks, auditLog)
 
@@ -127,7 +112,6 @@ function deleteTask(taskId: string, input: DeleteTaskInput): DeleteTaskResult {
   const actor = actorService.ensureActorExists(input.actorId)
   const task = findActiveTaskOrThrow(taskId)
 
-  // Prepare soft-deleted task (PRD §13.5 — preserves history).
   const now = new Date().toISOString()
   const deletedTask: Task = {
     ...task,
@@ -148,7 +132,6 @@ function deleteTask(taskId: string, input: DeleteTaskInput): DeleteTaskResult {
     createdAt: now
   }
 
-  // Persist both in a single conceptual flow.
   const tasks = replaceTask(taskRepository.findAll(), deletedTask)
   commitTaskAndAuditLog(tasks, auditLog)
 
@@ -157,6 +140,7 @@ function deleteTask(taskId: string, input: DeleteTaskInput): DeleteTaskResult {
 
 export const taskService = {
   getActiveTasks,
+  getActiveTaskById: findActiveTaskOrThrow,
   createTask,
   updateTaskStatus,
   deleteTask

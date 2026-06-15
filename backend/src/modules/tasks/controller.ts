@@ -12,6 +12,15 @@ export const taskController = {
     })
   }),
 
+  getTaskById: asyncHandler(async (req, res) => {
+    const taskId = req.params.taskId as string
+    const task = await taskService.getActiveTaskById(taskId)
+    return sendSuccess(res, {
+      message: 'Task retrieved successfully',
+      data: task
+    })
+  }),
+
   createTask: asyncHandler(async (req, res) => {
     const task = await taskService.createTask(req.body)
     return sendSuccess(res, {

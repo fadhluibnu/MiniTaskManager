@@ -139,6 +139,58 @@ None — empty result returns `200` with `data: []`.
 
 ---
 
+### `GET /api/tasks/:taskId/detail`
+
+Returns the detail of a single **active** task (i.e. a task with
+`deletedAt === null`). The task is returned as a full object identical
+in shape to entries from `GET /api/tasks`.
+
+Deleted tasks are NOT returned by this endpoint — they are accessible
+through a separate deleted-task endpoint (out of scope for this version).
+
+**Request**
+
+```
+GET /api/tasks/task_001/detail
+```
+
+**URL parameters**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `taskId` | string | yes | Task ID. |
+
+**Response — 200 OK**
+
+```json
+{
+  "success": true,
+  "message": "Task retrieved successfully",
+  "data": {
+    "id": "task_001",
+    "title": "Prepare sprint report",
+    "description": "Summarize current task progress for the internal team.",
+    "status": "in_progress",
+    "createdByActorId": "john.doe",
+    "createdByActorName": "John Doe",
+    "createdAt": "2026-06-14T19:58:00.000Z",
+    "updatedAt": "2026-06-15T03:59:00.000Z",
+    "deletedAt": null,
+    "deletedByActorId": null,
+    "deletedByActorName": null
+  }
+}
+```
+
+**Errors**
+
+| Status | Code | When |
+|--------|------|------|
+| `400` | `VALIDATION_ERROR` | Empty or missing `taskId` in URL params. |
+| `404` | `TASK_NOT_FOUND` | Task ID does not exist, OR the task has been soft-deleted (active-task endpoint returns 404 from the active perspective). |
+
+---
+
 ### `POST /api/tasks`
 
 Creates a new task. The new task always starts with status `to_do`.
