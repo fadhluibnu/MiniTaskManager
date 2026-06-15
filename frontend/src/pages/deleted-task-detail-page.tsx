@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useStoredActor } from '@/features/actors/hooks/use-stored-actor'
 import TaskAuditLogsSection from '@/features/tasks/components/task-audit-logs-section'
+import TaskDetailError from '@/features/tasks/detail/components/task-detail-error'
 import DeletedDetailPageHeader from '@/features/tasks/deleted-detail/components/page-header'
 import DeletedTaskInfoCard from '@/features/tasks/deleted-detail/components/task-info-card'
 import DeletedTaskNotFound from '@/features/tasks/deleted-detail/components/deleted-task-not-found'
@@ -17,8 +18,13 @@ export default function DeletedTaskDetailPage() {
 
   const { taskId } = useParams<{ taskId: string }>()
   const actor = useStoredActor()
-  const { task, isLoading } = useDeletedTask(taskId ?? '')
-  const { logs, isLoading: isAuditLoading, refetch: refetchLogs } = useTaskAuditLogs(taskId ?? '')
+  const { task, isLoading, isError, error, refetch } = useDeletedTask(taskId ?? '')
+  const {
+    logs,
+    isLoading: isAuditLoading,
+    error: auditError,
+    refetch: refetchLogs,
+  } = useTaskAuditLogs(taskId ?? '')
 
   return (
     <main
@@ -33,6 +39,8 @@ export default function DeletedTaskDetailPage() {
 
         {isLoading ? (
           <TaskDeletedDetailLoading />
+        ) : isError ? (
+          <TaskDetailError error={error!} onRetry={refetch} backTo="/deleted-tasks" />
         ) : !task ? (
           <DeletedTaskNotFound />
         ) : (
@@ -45,9 +53,8 @@ export default function DeletedTaskDetailPage() {
             <TaskAuditLogsSection
               logs={logs}
               isLoading={isAuditLoading}
-              onRefresh={() => {
-                void refetchLogs()
-              }}
+              error={auditError}
+              onRefresh={refetchLogs}
               emptyTitle="No audit logs found"
               emptyDescription="This deleted task should normally have at least one delete audit log."
             />

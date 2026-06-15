@@ -1,42 +1,49 @@
 import { useQuery } from '@tanstack/react-query'
 import { QUERY_KEYS } from '@/shared/constants/query-keys'
-import { STORAGE_KEYS } from '@/shared/constants/storage-keys'
-import { getJSON, setJSON } from '@/shared/utils/safe-local-storage'
-import { FALLBACK_TASKS } from '../../constants/fallback-tasks'
+import { ApiError, extractApiError } from '@/shared/lib/api-helpers'
+import { taskService } from '../../services/task-service'
 import type { Task } from '../../types/task'
 
 interface UseDeletedTaskResult {
   task: Task | null
   isLoading: boolean
-  isUsingFallback: boolean
+  isError: boolean
+  error: ApiError | null
   refetch: () => void
 }
 
-const SIMULATED_DELAY_MS = 300
-
-function readLocalTasks(): Task[] {
-  const stored = getJSON<Task[]>(STORAGE_KEYS.previewTasks)
-  if (stored && Array.isArray(stored) && stored.length > 0) {
-    return stored
-  }
-  setJSON(STORAGE_KEYS.previewTasks, FALLBACK_TASKS)
-  return FALLBACK_TASKS
-}
-
+/**
+ * Fetches a single soft-deleted task by id from the backend.
+ *
+ * `DELETED_TASK_NOT_FOUND` (404) — which the backend returns both for
+ * a missing task AND for a task that still exists but has not been
+ * soft-deleted — is mapped to `task: null` so the page can render the
+ * dedicated `DeletedTaskNotFound` component without inspecting the
+ * error code itself.
+ *
+ * Other errors (500, network) bubble up to React Query so `isError`
+ * and `error` expose the underlying `ApiError` for the page to render
+ * `TaskDetailError` with a Retry button.
+ */
 export function useDeletedTask(taskId: string): UseDeletedTaskResult {
   const query = useQuery<Task | null>({
     queryKey: QUERY_KEYS.tasks.deletedDetail(taskId),
+    enabled: Boolean(taskId),
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS))
-      const all = readLocalTasks()
-      return all.find((task) => task.id === taskId && task.deletedAt !== null) ?? null
+      try {
+        return await taskService.getDeletedTaskById(taskId)
+      } catch (err) {
+        if (extractApiError(err).code === 'DELETED_TASK_NOT_FOUND') return null
+        throw err
+      }
     },
   })
 
   return {
     task: query.data ?? null,
     isLoading: query.isLoading,
-    isUsingFallback: false,
+    isError: query.isError,
+    error: query.error ? extractApiError(query.error) : null,
     refetch: () => {
       void query.refetch()
     },

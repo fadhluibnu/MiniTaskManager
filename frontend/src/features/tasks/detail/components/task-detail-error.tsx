@@ -5,16 +5,28 @@ import { ApiError } from '@/shared/lib/api-helpers'
 interface TaskDetailErrorProps {
   error: ApiError
   onRetry: () => void
+  /**
+   * Target path for the "Back to Tasks" link. Defaults to `/tasks` so
+   * the active detail page keeps its current behavior; the deleted
+   * detail page passes `/deleted-tasks` to send the user back to the
+   * deleted-tasks list instead.
+   */
+  backTo?: string
 }
 
 /**
- * Full-page error state for `TaskDetailPage`. Renders when `useTask`
- * threw an error that was NOT a `TASK_NOT_FOUND` 404 — i.e. the
- * backend is unreachable or returned a 5xx. 404s are mapped to
- * `task: null` inside the hook and render the dedicated
- * `TaskNotFound` state instead.
+ * Full-page error state for the active and deleted task detail pages.
+ * Renders when the underlying `useTask` / `useDeletedTask` hook
+ * threw an error that was NOT a 404 — i.e. the backend is
+ * unreachable or returned a 5xx. 404s are mapped to `task: null`
+ * inside each hook and render the dedicated `TaskNotFound` /
+ * `DeletedTaskNotFound` state instead.
  */
-export default function TaskDetailError({ error, onRetry }: TaskDetailErrorProps) {
+export default function TaskDetailError({
+  error,
+  onRetry,
+  backTo = '/tasks',
+}: TaskDetailErrorProps) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
@@ -33,7 +45,7 @@ export default function TaskDetailError({ error, onRetry }: TaskDetailErrorProps
           Retry
         </Button>
         <Link
-          to="/tasks"
+          to={backTo}
           className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-950 transition hover:bg-slate-50"
         >
           Back to Tasks

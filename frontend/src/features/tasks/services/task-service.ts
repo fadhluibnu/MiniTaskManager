@@ -66,6 +66,18 @@ async function getDeletedTasks(): Promise<Task[]> {
   return extractApiData<Task[]>(response)
 }
 
+/**
+ * Returns the detail of a single soft-deleted task.
+ *
+ * Returns 404 with code `DELETED_TASK_NOT_FOUND` if the task does not
+ * exist OR exists but has not been soft-deleted. Hooks that consume
+ * this should map that 404 to a "not found" UI state.
+ */
+async function getDeletedTaskById(taskId: string): Promise<Task> {
+  const response = await httpClient.get(`/tasks/deleted/${taskId}/detail`)
+  return extractApiData<Task>(response)
+}
+
 async function createTask(payload: CreateTaskPayload): Promise<Task> {
   const response = await httpClient.post('/tasks', payload)
   return extractApiData<Task>(response)
@@ -91,6 +103,7 @@ export const taskService = {
   getActiveTaskById,
   getTaskAuditLogs,
   getDeletedTasks,
+  getDeletedTaskById,
   createTask,
   updateTaskStatus,
   deleteTask,

@@ -749,11 +749,34 @@ TanStack Query prefix-matches the deleted list key
 `['tasks', 'deleted']` and re-fetches on the next mount or
 explicit refetch.
 
-> `DeletedTaskDetailPage` (`/deleted-tasks/:taskId`) is **not yet**
-> integrated. It still reads from `localStorage` via
-> `useDeletedTask` and will be migrated in a follow-up using the
-> `GET /api/tasks/deleted/:taskId/detail` endpoint (which returns
-> `DELETED_TASK_NOT_FOUND` for non-deleted / missing tasks).
+#### Deleted-detail error handling
+
+`useDeletedTask` (used by `DeletedTaskDetailPage`) is the
+deleted-task mirror of `useTask`. The pattern is identical except
+for the 404 code:
+
+- `DELETED_TASK_NOT_FOUND` (404) is caught inside the `queryFn` and
+  mapped to `task: null`. The page then renders the dedicated
+  `DeletedTaskNotFound` component (which links to both
+  `/deleted-tasks` and `/tasks`). This is **different** from the
+  active detail's `TASK_NOT_FOUND` — the two endpoints use distinct
+  codes so hooks can disambiguate the missing-vs-still-active
+  cases correctly.
+- Other errors (500, network) bubble up to React Query as a thrown
+  `ApiError`. The hook exposes `isError` and `error` so the page
+  can render a full-page error state.
+- The page reuses `TaskDetailError` (created for the active detail
+  page) with a `backTo="/deleted-tasks"` prop so the "Back to Tasks"
+  link points at the deleted list rather than the active one. The
+  component itself takes `backTo?: string` and defaults to
+  `/tasks`, keeping the active detail page's behavior unchanged.
+- `useTaskAuditLogs` is shared with `TaskDetailPage` and exposes
+  `isError` / `error`; `TaskAuditLogsSection` renders an inline
+  error with retry on failure.
+
+At this point every task-related page reads from the backend; the
+`features/tasks/constants/fallback-tasks.ts` mock seed is no
+longer imported anywhere and can be deleted.
 
 ---
 
